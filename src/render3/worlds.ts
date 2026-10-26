@@ -56,23 +56,24 @@ function buildLaneWorld(chapter: ChapterDef): THREE.Group {
   door.position.set(0, 9.4, -29.75);
   world.add(door);
 
-  for (const [x, y] of [
-    [-6.4, 8.4],
-    [6.4, 16.2],
-    [-6.4, 16.2]
-  ]) {
-    const ac = buildACUnit();
-    ac.position.set(x, y, -29.4);
-    world.add(ac);
-  }
+  const ac = buildACUnit();
+  ac.position.set(-6.4, 8.4, -29.4);
+  world.add(ac);
 
   const awning = new THREE.Mesh(
     new THREE.BoxGeometry(8, 0.25, 2.8),
-    textured('fabric', 0x6a2a2a, { repeatX: 3, repeatY: 1, roughness: 0.9 })
+    textured('fabric', 0x1a3a3a, { repeatX: 3, repeatY: 1, roughness: 0.9 })
   );
-  awning.position.set(0, 13.1, -27.7);
+  awning.position.set(0, 13.4, -27.7);
   awning.rotation.x = 0.16;
   world.add(awning);
+
+  const drainpipe = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.18, 0.18, 16, 6),
+    textured('metal', 0x4a5266, { roughness: 0.6, metalness: 0.4 })
+  );
+  drainpipe.position.set(7, 8, -29.4);
+  world.add(drainpipe);
 
   const tank = new THREE.Mesh(
     new THREE.CylinderGeometry(2.4, 2.4, 3.2, 12),
