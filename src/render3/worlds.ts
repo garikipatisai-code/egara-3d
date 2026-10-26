@@ -372,7 +372,7 @@ function buildGlassHouseWorld(): THREE.Group {
   world.add(cannon);
 
   const oxygen = buildOxygenCylinder();
-  oxygen.position.set(0, 6, -4);
+  oxygen.position.set(9, 6, -4);
   world.add(oxygen);
 
   const shardMat = new THREE.MeshLambertMaterial({
