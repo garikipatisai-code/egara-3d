@@ -1,0 +1,575 @@
+[
+  {
+    "id": "ch1",
+    "order": 1,
+    "enabled": true,
+    "title": { "en": "First Flight", "te": "మొదటి ఎగురుడు" },
+    "subtitle": { "en": "Punnami Lane, after the lights went out", "te": "పున్నమి వీధి, దీపాలు ఆరిన తర్వాత" },
+    "location": "lane",
+    "palette": { "fog": "#111a38", "sky": "#0d1530", "key": "#ffe9c0", "fill": "#9abcf8", "accent": "#e8b04b" },
+    "bounds": { "radius": 120, "minY": 2, "maxY": 40 },
+    "spawn": { "pos": { "x": 0, "y": 6, "z": 10 }, "yaw": 3.14159 },
+    "layout": "city",
+    "layoutSeed": 7,
+    "solids": [
+      { "x": 0, "z": -34, "r": 7, "h": 18, "w": 14, "d": 8, "rot": 0, "colorIdx": 3 }
+    ],
+    "tuning": { "speed": 15, "boost": 9, "arenaRadius": 120, "minAltitude": 2, "maxAltitude": 40, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch1-reach-balcony",
+        "kind": "reach",
+        "label": { "en": "Reach the balcony", "te": "బాల్కనీ చేరుకో" },
+        "hint": { "en": "Follow the warm window", "te": "వెచ్చని కిటికీ వైపు వెళ్లు" },
+        "target": { "x": 0, "y": 7, "z": -22 },
+        "radius": 6
+      },
+      {
+        "id": "ch1-collect-shards",
+        "kind": "collect",
+        "label": { "en": "Recover 4 memories", "te": "4 జ్ఞాపకాలు సేకరించు" },
+        "hint": { "en": "They glow in the dust", "te": "అవి దుమ్ములో మెరుస్తాయి" },
+        "shardIds": ["s1-1", "s1-2", "s1-3", "s1-4"]
+      },
+      {
+        "id": "ch1-survive",
+        "kind": "survive",
+        "label": { "en": "Stay airborne for 20 seconds", "te": "20 సెకన్లు గాలిలో ఉండు" },
+        "seconds": 20
+      },
+      {
+        "id": "ch1-reach-car",
+        "kind": "reach",
+        "label": { "en": "Find the car with the glass roof", "te": "గాజు పైకప్పు ఉన్న కారును కనుగొన" },
+        "hint": { "en": "It waited at the end of the lane", "te": "అది వీధి చివర ఎదురుచూసింది" },
+        "target": { "x": 0, "y": 5, "z": 30 },
+        "radius": 5
+      }
+    ],
+    "waves": [],
+    "shards": [
+      {
+        "id": "s1-1",
+        "pos": { "x": -12, "y": 8, "z": 4 },
+        "motif": "hand",
+        "caption": { "en": "A hand, warm under a lamp.", "te": "దీపం కింద వెచ్చగా ఉన్న ఒక చెయ్యి." }
+      },
+      {
+        "id": "s1-2",
+        "pos": { "x": 10, "y": 10, "z": -8 },
+        "motif": "locket",
+        "caption": { "en": "A heart cut from pencil lead.", "te": "పెన్సిల్ సీసపు నుండి చెక్కిన హృదయం." }
+      },
+      {
+        "id": "s1-3",
+        "pos": { "x": -8, "y": 5, "z": -18 },
+        "motif": "phone",
+        "caption": { "en": "A phone ringing in an empty room.", "te": "ఖాళీ గదిలో మోగుతున్న ఫోన్." }
+      },
+      {
+        "id": "s1-4",
+        "pos": { "x": 14, "y": 7, "z": 12 },
+        "motif": "car",
+        "caption": { "en": "Headlights on wet stone.", "te": "తడి రాతిపై కారు దీపాలు." }
+      }
+    ],
+    "hazards": [
+      {
+        "id": "ch1-swatter",
+        "kind": "swatter",
+        "pos": { "x": 0, "y": 7, "z": -2 },
+        "radius": 3.2,
+        "height": 10,
+        "periodSeconds": 7,
+        "activeSeconds": 1.2,
+        "path": [
+          { "x": -20, "y": 7, "z": -2 },
+          { "x": 20, "y": 7, "z": -2 }
+        ]
+      },
+      {
+        "id": "ch1-wind",
+        "kind": "wind",
+        "pos": { "x": -16, "y": 6, "z": 10 },
+        "radius": 7,
+        "height": 9,
+        "strength": 8
+      }
+    ],
+    "cards": [
+      {
+        "id": "ch1-intro",
+        "at": "intro",
+        "title": { "en": "The lane remembers", "te": "వీధి గుర్తుంచుకుంటుంది" },
+        "body": {
+          "en": "A boy fell in Punnami Lane. When the lights came back, a small wind rose from the dust.",
+          "te": "పున్నమి వీధిలో ఒక అబ్బాయి పడిపోయాడు. దీపాలు తిరిగి వచ్చినప్పుడు, దుమ్ము నుండి ఒక చిన్న గాలి లేచింది."
+        }
+      },
+      {
+        "id": "ch1-mid",
+        "at": "mid",
+        "body": {
+          "en": "The lane remembers in pieces. A hand. A locket. A phone left off the hook.",
+          "te": "వీధి ముక్కలుగా గుర్తుంచుకుంటుంది. ఒక చెయ్యి. ఒక లాకెట్. ఆఫ్ చేయని ఫోన్."
+        }
+      },
+      {
+        "id": "ch1-outro",
+        "at": "outro",
+        "title": { "en": "The car did not stop", "te": "కారు ఆగలేదు" },
+        "body": {
+          "en": "The car did not stop. The boy did not get up. The fly did.",
+          "te": "కారు ఆగలేదు. అబ్బాయి లేవలేదు. ఈగ లేచింది."
+        }
+      }
+    ],
+    "unlock": ["ch2"]
+  },
+  {
+    "id": "ch2",
+    "order": 2,
+    "enabled": true,
+    "title": { "en": "The Locket", "te": "లాకెట్" },
+    "subtitle": { "en": "Shilpi's window, before dawn", "te": "షిల్పి కిటికీ, తెల్లవారుజాము" },
+    "location": "balcony",
+    "palette": { "fog": "#070b18", "sky": "#04060f", "key": "#ffd9a0", "fill": "#1b2a4a", "accent": "#ffb060" },
+    "bounds": { "radius": 120, "minY": 2, "maxY": 36 },
+    "spawn": { "pos": { "x": 0, "y": 6, "z": 10 }, "yaw": 3.14159 },
+    "layout": "city",
+    "layoutSeed": 7,
+    "solids": [
+      { "x": 0, "z": -34, "r": 7, "h": 18, "w": 14, "d": 8, "rot": 0, "colorIdx": 3 }
+    ],
+    "tuning": { "speed": 15, "boost": 9, "arenaRadius": 120, "minAltitude": 2, "maxAltitude": 36, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch2-reach-locket",
+        "kind": "reach",
+        "label": { "en": "Reach the locket", "te": "లాకెట్ చేరుకో" },
+        "hint": { "en": "It is still on the balcony rail", "te": "అది ఇంకా బాల్కనీ కంచెపై ఉంది" },
+        "target": { "x": 0, "y": 9, "z": -24 },
+        "radius": 4
+      },
+      {
+        "id": "ch2-collect-shards",
+        "kind": "collect",
+        "label": { "en": "Recover 4 memories", "te": "4 జ్ఞాపకాలు సేకరించు" },
+        "shardIds": ["s2-1", "s2-2", "s2-3", "s2-4"]
+      },
+      {
+        "id": "ch2-reach-window",
+        "kind": "reach",
+        "label": { "en": "Bring it to Shilpi's window", "te": "షిల్పి కిటికీకి తీసుకెళ్లు" },
+        "target": { "x": 9, "y": 8, "z": -26 },
+        "radius": 4
+      },
+      {
+        "id": "ch2-write-name",
+        "kind": "write",
+        "label": { "en": "Trace your name in the dust", "te": "దుమ్ములో నీ పేరు రాయి" },
+        "hint": { "en": "Fly through the three marks", "te": "మూడు గుర్తుల గుండా ఎగరండి" },
+        "target": { "x": 0, "y": 9, "z": -20 },
+        "radius": 2,
+        "marks": [
+          { "x": -2, "y": 9, "z": -20 },
+          { "x": 0, "y": 9, "z": -20 },
+          { "x": 2, "y": 9, "z": -20 }
+        ]
+      }
+    ],
+    "waves": [],
+    "shards": [
+      {
+        "id": "s2-1",
+        "pos": { "x": -14, "y": 7, "z": 8 },
+        "motif": "locket",
+        "caption": { "en": "Pencil dust on her table.", "te": "ఆమె బల్లపై పెన్సిల్ పొడి." }
+      },
+      {
+        "id": "s2-2",
+        "pos": { "x": 12, "y": 6, "z": -4 },
+        "motif": "lamp",
+        "caption": { "en": "A needle shining under the lamp.", "te": "దీపం కింద మెరిసే సూది." }
+      },
+      {
+        "id": "s2-3",
+        "pos": { "x": -6, "y": 10, "z": -12 },
+        "motif": "hand",
+        "caption": { "en": "The locket between two fingers.", "te": "రెండు వేళ్ల మధ్య చిన్న లాకెట్." }
+      },
+      {
+        "id": "s2-4",
+        "pos": { "x": 16, "y": 8, "z": 6 },
+        "motif": "wing",
+        "caption": { "en": "A wing in the window glass.", "te": "కిటికీ అద్దంలో ఒక రెక్క." }
+      }
+    ],
+    "hazards": [
+      {
+        "id": "ch2-wind-a",
+        "kind": "wind",
+        "pos": { "x": -18, "y": 7, "z": 2 },
+        "radius": 8,
+        "height": 10,
+        "strength": 10
+      },
+      {
+        "id": "ch2-wind-b",
+        "kind": "wind",
+        "pos": { "x": 14, "y": 6, "z": -12 },
+        "radius": 6,
+        "height": 8,
+        "strength": 7
+      },
+      {
+        "id": "ch2-swatter",
+        "kind": "swatter",
+        "pos": { "x": 6, "y": 7, "z": 0 },
+        "radius": 3,
+        "height": 9,
+        "periodSeconds": 9,
+        "activeSeconds": 1.4,
+        "path": [
+          { "x": -14, "y": 7, "z": 0 },
+          { "x": 26, "y": 7, "z": 0 }
+        ]
+      }
+    ],
+    "ally": { "id": "shilpi", "pos": { "x": 10, "y": 8.2, "z": -28 }, "scale": 100 },
+    "cards": [
+      {
+        "id": "ch2-intro",
+        "at": "intro",
+        "title": { "en": "Before dawn", "te": "తెల్లవారుజాము" },
+        "body": {
+          "en": "The locket is still on the balcony. Shilpi has not slept. The lane is dark enough to be brave.",
+          "te": "లాకెట్ ఇంకా బాల్కనీలో ఉంది. షిల్పి నిద్రపోలేదు. వీధి ధైర్యంగా ఉండేంత చీకటిగా ఉంది."
+        }
+      },
+      {
+        "id": "ch2-mid",
+        "at": "mid",
+        "body": {
+          "en": "She feels a draft. She does not swat it. She waits.",
+          "te": "ఆమెకు గాలి తగులుతుంది. ఆమె దాన్ని కొట్టదు. ఆమె ఎదురుచూస్తుంది."
+        }
+      },
+      {
+        "id": "ch2-outro",
+        "at": "outro",
+        "title": { "en": "Three marks", "te": "మూడు గుర్తులు" },
+        "body": {
+          "en": "In the dust on the sill, three marks. Her tears fill the fourth.",
+          "te": "అద్దం అంచున దుమ్ములో మూడు గుర్తులు. నాలుగోదాన్ని ఆమె కన్నీళ్లు నింపుతాయి."
+        }
+      }
+    ],
+    "unlock": ["ch3"]
+  },
+  {
+    "id": "ch3",
+    "order": 3,
+    "enabled": true,
+    "title": { "en": "The Workshop", "te": "షిల్పి వర్క్షాప్" },
+    "subtitle": { "en": "Shilpi's bench, first light", "te": "షిల్పి బెంచ్, తొలి వెలుగు" },
+    "location": "workshop",
+    "palette": { "fog": "#1a120c", "sky": "#0c0906", "key": "#ffd9a0", "fill": "#4a2f1d", "accent": "#ffb060" },
+    "bounds": { "radius": 24, "minY": 2, "maxY": 18 },
+    "spawn": { "pos": { "x": 0, "y": 5, "z": 16 }, "yaw": 3.14159 },
+    "layout": "none",
+    "solids": [
+      { "x": -10, "z": -4, "r": 4, "h": 5, "w": 8, "d": 6, "rot": 0.2, "colorIdx": 0 },
+      { "x": 9, "z": 2, "r": 3, "h": 7, "w": 5, "d": 5, "rot": 0, "colorIdx": 1 },
+      { "x": 0, "z": -13, "r": 4, "h": 4, "w": 7, "d": 7, "rot": 0, "colorIdx": 2 },
+      { "x": -6, "z": 8, "r": 2, "h": 3, "w": 9, "d": 1.2, "rot": 0.5, "colorIdx": 3 }
+    ],
+    "tuning": { "speed": 12, "boost": 7, "arenaRadius": 24, "minAltitude": 2, "maxAltitude": 18, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch3-reach-hand",
+        "kind": "reach",
+        "label": { "en": "Land on Shilpi's hand", "te": "షిల్పి చేతిపై వాలండి" },
+        "target": { "x": 0, "y": 9, "z": -14 },
+        "radius": 5
+      },
+      {
+        "id": "ch3-collect-shards",
+        "kind": "collect",
+        "label": { "en": "Recover 4 memories", "te": "4 జ్ఞాపకాలు సేకరించు" },
+        "shardIds": ["s3-1", "s3-2", "s3-3", "s3-4"]
+      },
+      {
+        "id": "ch3-write-name",
+        "kind": "write",
+        "label": { "en": "Write your name again", "te": "మళ్లీ నీ పేరు రాయి" },
+        "target": { "x": 0, "y": 8, "z": -10 },
+        "radius": 2,
+        "marks": [
+          { "x": -2, "y": 8, "z": -10 },
+          { "x": 0, "y": 8, "z": -10 },
+          { "x": 2, "y": 8, "z": -10 }
+        ]
+      },
+      {
+        "id": "ch3-sting-mite",
+        "kind": "destroy",
+        "label": { "en": "Sting the mite", "te": "పురుగును కుట్టు" },
+        "hint": { "en": "Space to sting", "te": "కుట్టడానికి Space" },
+        "count": 1
+      },
+      {
+        "id": "ch3-survive",
+        "kind": "survive",
+        "label": { "en": "Stay clear for 15 seconds", "te": "15 సెకన్లు దూరంగా ఉండు" },
+        "seconds": 15
+      }
+    ],
+    "waves": [
+      { "atSeconds": 0, "count": 1, "kind": "drone", "pos": { "x": 0, "y": 8, "z": -4 } }
+    ],
+    "shards": [
+      {
+        "id": "s3-1",
+        "pos": { "x": -14, "y": 8, "z": 6 },
+        "motif": "needle",
+        "caption": { "en": "The eye of a needle.", "te": "సూది కన్ను." }
+      },
+      {
+        "id": "s3-2",
+        "pos": { "x": 12, "y": 10, "z": -8 },
+        "motif": "lamp",
+        "caption": { "en": "A lamp made for tiny work.", "te": "చిన్న పనుల కోసం ఒక దీపం." }
+      },
+      {
+        "id": "s3-3",
+        "pos": { "x": -8, "y": 5, "z": -14 },
+        "motif": "hand",
+        "caption": { "en": "Her hand, holding still.", "te": "ఆమె చెయ్యి, చలనం లేకుండా." }
+      },
+      {
+        "id": "s3-4",
+        "pos": { "x": 14, "y": 6, "z": 10 },
+        "motif": "locket",
+        "caption": { "en": "The locket, finished.", "te": "లాకెట్, పూర్తయింది." }
+      }
+    ],
+    "hazards": [
+      {
+        "id": "ch3-tweezer",
+        "kind": "tweezer",
+        "pos": { "x": -12, "y": 8, "z": -6 },
+        "radius": 2,
+        "height": 4,
+        "periodSeconds": 6,
+        "activeSeconds": 3,
+        "path": [
+          { "x": -12, "y": 8, "z": -6 },
+          { "x": 12, "y": 8, "z": -6 }
+        ]
+      },
+      {
+        "id": "ch3-lamp",
+        "kind": "lamp",
+        "pos": { "x": 0, "y": 11, "z": -14 },
+        "radius": 4,
+        "height": 4
+      }
+    ],
+    "ally": { "id": "shilpi", "pos": { "x": 0, "y": 9.2, "z": -18 }, "scale": 100 },
+    "cards": [
+      {
+        "id": "ch3-intro",
+        "at": "intro",
+        "title": { "en": "Small tools", "te": "చిన్న పనిముట్లు" },
+        "body": {
+          "en": "Needle. Thread. A matchbox for a door. Shilpi builds small things for a small friend.",
+          "te": "సూది. దారం. తలుపుగా అగ్గిపెట్టె. షిల్పి చిన్న స్నేహితుడికి చిన్న వస్తువులు చేస్తుంది."
+        }
+      },
+      {
+        "id": "ch3-mid",
+        "at": "mid",
+        "body": {
+          "en": "The first sting lands. It is not enough to kill. It is enough to be believed.",
+          "te": "మొదటి కుట్టు తగులుతుంది. చంపడానికి సరిపోదు. నమ్మడానికి సరిపోతుంది."
+        }
+      },
+      {
+        "id": "ch3-outro",
+        "at": "outro",
+        "title": { "en": "A car below", "te": "కింద ఒక కారు" },
+        "body": {
+          "en": "Below the window, a car with a glass roof. Garva has come to the lane.",
+          "te": "కిటికీ కింద, గాజు పైకప్పు ఉన్న కారు. గర్వ నగర వీధికి వచ్చాడు."
+        }
+      }
+    ],
+    "unlock": ["ch4"]
+  },
+  {
+    "id": "ch4",
+    "order": 4,
+    "enabled": false,
+    "title": { "en": "The Airport Road", "te": "విమానాశ్రయ మార్గం" },
+    "subtitle": { "en": "The fastest road out of Nagaram", "te": "నగరం నుండి బయటకు వెళ్లే వేగవంతమైన రోడ్డు" },
+    "location": "airport-road",
+    "palette": { "fog": "#1a1208", "sky": "#0a0806", "key": "#ffd0a0", "fill": "#3a2a1a", "accent": "#ff9a3d" },
+    "bounds": { "radius": 130, "minY": 2, "maxY": 30 },
+    "spawn": { "pos": { "x": 0, "y": 6, "z": 30 }, "yaw": 3.14159 },
+    "layout": "none",
+    "tuning": { "speed": 18, "boost": 12, "arenaRadius": 130, "minAltitude": 2, "maxAltitude": 30, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch4-reach-car",
+        "kind": "reach",
+        "label": { "en": "Catch the car", "te": "కారును పట్టుకో" },
+        "target": { "x": 0, "y": 6, "z": -20 },
+        "radius": 6
+      }
+    ],
+    "waves": [],
+    "shards": [],
+    "hazards": [],
+    "cards": [
+      {
+        "id": "ch4-intro",
+        "at": "intro",
+        "body": { "en": "Later. A longer road. A faster car.", "te": "తర్వాత. పొడవైన రోడ్డు. వేగమైన కారు." }
+      }
+    ],
+    "unlock": ["ch5"]
+  },
+  {
+    "id": "ch5",
+    "order": 5,
+    "enabled": false,
+    "title": { "en": "Haunt the House", "te": "ఇంటిని భయపెట్టు" },
+    "subtitle": { "en": "Garva House, after midnight", "te": "గర్వ ఇల్లు, అర్ధరాత్రి తర్వాత" },
+    "location": "garva-house",
+    "palette": { "fog": "#0a0d16", "sky": "#060810", "key": "#e8f0ff", "fill": "#2a3450", "accent": "#e8b04b" },
+    "bounds": { "radius": 80, "minY": 2, "maxY": 50 },
+    "spawn": { "pos": { "x": 0, "y": 8, "z": 30 }, "yaw": 3.14159 },
+    "layout": "none",
+    "tuning": { "speed": 16, "boost": 10, "arenaRadius": 80, "minAltitude": 2, "maxAltitude": 50, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch5-reach-atrium",
+        "kind": "reach",
+        "label": { "en": "Enter the atrium", "te": "అట్రియంలోకి వెళ్లు" },
+        "target": { "x": 0, "y": 14, "z": 0 },
+        "radius": 8
+      }
+    ],
+    "waves": [],
+    "shards": [],
+    "hazards": [],
+    "cards": [
+      {
+        "id": "ch5-intro",
+        "at": "intro",
+        "body": { "en": "A house with too many lights and too much glass.", "te": "చాలా దీపాలు, చాలా గాజు ఉన్న ఇల్లు." }
+      }
+    ],
+    "unlock": ["ch6"]
+  },
+  {
+    "id": "ch6",
+    "order": 6,
+    "enabled": false,
+    "title": { "en": "The Diviner", "te": "భవిష్యవక్త" },
+    "subtitle": { "en": "A room full of smoke and bought magic", "te": "పొగతో నిండిన, కొన్న మంత్రగత్తె గది" },
+    "location": "diviner-room",
+    "palette": { "fog": "#1a0e08", "sky": "#0c0604", "key": "#ffb060", "fill": "#4a2a1a", "accent": "#ff7a3d" },
+    "bounds": { "radius": 40, "minY": 2, "maxY": 30 },
+    "spawn": { "pos": { "x": 0, "y": 8, "z": 24 }, "yaw": 3.14159 },
+    "layout": "none",
+    "tuning": { "speed": 14, "boost": 8, "arenaRadius": 40, "minAltitude": 2, "maxAltitude": 30, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch6-reach-circle",
+        "kind": "reach",
+        "label": { "en": "Reach the ritual circle", "te": "ఆచార వృత్తం చేరుకో" },
+        "target": { "x": 0, "y": 8, "z": -8 },
+        "radius": 6
+      }
+    ],
+    "waves": [],
+    "shards": [],
+    "hazards": [],
+    "cards": [
+      {
+        "id": "ch6-intro",
+        "at": "intro",
+        "body": { "en": "The diviner sells certainty. The house sells nothing.", "te": "భవిష్యవక్త నిశ్చయాన్ని అమ్ముతాడు. ఇల్లు ఏమీ అమ్మదు." }
+      }
+    ],
+    "unlock": ["ch7"]
+  },
+  {
+    "id": "ch7",
+    "order": 7,
+    "enabled": false,
+    "title": { "en": "The Glass House", "te": "గాజు ఇల్లు" },
+    "subtitle": { "en": "Garva House, with the doors locked", "te": "గర్వ ఇల్లు, తలుపులు మూసిన తర్వాత" },
+    "location": "garva-house",
+    "palette": { "fog": "#0a0d16", "sky": "#060810", "key": "#e8f0ff", "fill": "#2a3450", "accent": "#e8b04b" },
+    "bounds": { "radius": 80, "minY": 2, "maxY": 50 },
+    "spawn": { "pos": { "x": 0, "y": 10, "z": 32 }, "yaw": 3.14159 },
+    "layout": "none",
+    "tuning": { "speed": 16, "boost": 10, "arenaRadius": 80, "minAltitude": 2, "maxAltitude": 50, "lives": 3 },
+    "objectives": [
+      {
+        "id": "ch7-reach-vent",
+        "kind": "reach",
+        "label": { "en": "Find the vent", "te": "వెంట్ కనుగొన" },
+        "target": { "x": -10, "y": 16, "z": 4 },
+        "radius": 5
+      }
+    ],
+    "waves": [],
+    "shards": [],
+    "hazards": [],
+    "cards": [
+      {
+        "id": "ch7-intro",
+        "at": "intro",
+        "body": { "en": "Every door is locked. The vents are not.", "te": "ప్రతి తలుపు మూసింది. వెంట్‌లు కాదు." }
+      }
+    ],
+    "unlock": ["ch8"]
+  },
+  {
+    "id": "ch8",
+    "order": 8,
+    "enabled": false,
+    "title": { "en": "The Cannon", "te": "ఫిరంగి" },
+    "subtitle": { "en": "The last small thing", "te": "చివరి చిన్న వస్తువు" },
+    "location": "glass-house",
+    "palette": { "fog": "#160805", "sky": "#080302", "key": "#ffb060", "fill": "#3a160c", "accent": "#ff6a2a" },
+    "bounds": { "radius": 40, "minY": 2, "maxY": 26 },
+    "spawn": { "pos": { "x": 0, "y": 8, "z": 22 }, "yaw": 3.14159 },
+    "layout": "none",
+    "tuning": { "speed": 13, "boost": 7, "arenaRadius": 40, "minAltitude": 2, "maxAltitude": 26, "lives": 1 },
+    "objectives": [
+      {
+        "id": "ch8-reach-cannon",
+        "kind": "reach",
+        "label": { "en": "Reach the cannon", "te": "ఫిరంగి చేరుకో" },
+        "target": { "x": 0, "y": 6, "z": -10 },
+        "radius": 4
+      }
+    ],
+    "waves": [],
+    "shards": [],
+    "hazards": [],
+    "cards": [
+      {
+        "id": "ch8-intro",
+        "at": "intro",
+        "body": { "en": "One shot. One wing. One small thing left.", "te": "ఒక పేలుడు. ఒక రెక్క. ఒక చిన్న వస్తువు మిగిలింది." }
+      }
+    ],
+    "unlock": []
+  }
+]

@@ -8,5 +8,5 @@ test('deployed site responds and boots', async ({ page }) => {
   const response = await page.goto(liveUrl!);
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('canvas')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 2 })).toContainText('Egara 3D');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Egara 3D');
 });

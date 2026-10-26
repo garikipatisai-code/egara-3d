@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "plan": "docs/plans/2026-10-26-story-p1.md",
+  "plan_sha256": "95908a38e932104e216bb52a3f31eb83862a2eb8c85d984428a9136df3de4fd0",
+  "spec": "docs/specs/2026-10-26-story-mode-3d.md",
+  "spec_sha256": "45201bdeec71b5334eec3314948584e75e1c11ec6561505c751b945ab7a5640f",
+  "cli_sha256": "582b6b274b5d9b810f01d513a6791ab11541b89f2d25c5cc4a1a66737d1222d5",
+  "approved_by": "garikipatisai-code (owner direction: \"start enriching game with world building, game chapters etc\"; standing blanket authorization)",
+  "approved_at": "2026-10-26T17:35:50Z",
+  "files": [
+    "src/**",
+    "tests/**",
+    "docs/qa/perf.md",
+    "docs/debt-ledger.md",
+    "README.md"
+  ],
+  "allow": [
+    "docs/plans/story-p1-progress.md"
+  ],
+  "created_at": "2026-10-26T17:36:26.706Z"
+}
