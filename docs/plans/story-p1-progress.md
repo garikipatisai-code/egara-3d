@@ -13,7 +13,7 @@ Gate: active (owner direction 2026-10-26T17:35:50Z)
 | 4 Render worlds | done | lane/balcony/workshop/hub, props, Shilpi, shards, hazards, marker; screenshots at 960×540; 59–64 draw calls |
 | 5 Runtime + UI | done | title/select/briefing/play/pause/debrief/cards; 8 cards; lock rules; 6 runtime tests; 6 e2e flows |
 | 6 Input, save v2, audio | done | touch stick + buttons, v1→v2 migration, buzz/wind/room/tension layers; 4 save tests + touch e2e |
-| 7 Perf, docs, deploy | in progress | unit 45/45, tsc clean, build 166.6 KB gz, smoke 7/7; deploy pending |
+| 7 Perf, docs, deploy | done | unit 45/45, tsc clean, build 166.6 KB gz, smoke 7/7, Pages success, live 200 + live smoke, 8 chapters on live select |
 
 ## Log
 
@@ -23,4 +23,5 @@ Gate: active (owner direction 2026-10-26T17:35:50Z)
 - 2026-10-26T17:58Z — T5 green: runtime + DOM screens; chapter select shows 8 cards, locks enforced, language persists.
 - 2026-10-26T18:00Z — T6 green: touch stick/buttons, save v2 migration, ambient audio layers.
 - 2026-10-26T18:03Z — T4 visual pass: lane/balcony/workshop/hub screenshots; locket prop scaled to read; adaptive resolution added after headless FPS pass.
-- 2026-10-26T18:05Z — Perf: 54 fps / 59 calls / 0.85 scale (ch.1), 56 fps / 64 calls / 0.65 scale (ch.3) on SwiftShader; bundle 166.6 KB gz. Docs updated. Remaining: deploy + live smoke + gate close.
+- 2026-10-26T18:05Z — Perf: 54 fps / 59 calls / 0.85 scale (ch.1), 56 fps / 64 calls / 0.65 scale (ch.3) on SwiftShader; bundle 166.6 KB gz. Docs updated.
+- 2026-10-26T18:09Z — Deployed `93fecdc`; Pages workflow success; live HTTP 200; live smoke passed; live chapter select shows 8 cards with locks. P1 complete.
