@@ -16,6 +16,7 @@ export type ObjectiveKind =
   | 'write'
   | 'destroy'
   | 'escort'
+  | 'sabotage'
   | 'boss';
 
 export interface ObjectiveDef {
@@ -29,8 +30,23 @@ export interface ObjectiveDef {
   seconds?: number;
   count?: number;
   marks?: Vec3Data[];
+  targets?: Vec3Data[];
   bossId?: string;
+  actorId?: string;
   escortId?: string;
+}
+
+export interface ActorDef {
+  id: string;
+  kind: 'car';
+  path: Vec3Data[];
+  speed: number;
+}
+
+export interface BossDef {
+  id: string;
+  name: LocalizedText;
+  nodes: number;
 }
 
 export type ShardMotif =
@@ -52,6 +68,7 @@ export interface ShardDef {
 
 export interface WaveDef {
   atSeconds: number;
+  atParanoia?: number;
   count: number;
   kind?: 'drone';
   pos?: Vec3Data;
@@ -68,6 +85,7 @@ export interface HazardDef {
   strength?: number;
   periodSeconds?: number;
   activeSeconds?: number;
+  activeAfterObjective?: number;
   path?: Vec3Data[];
   dir?: Vec3Data;
 }
@@ -131,6 +149,8 @@ export interface ChapterDef {
   solids?: { x: number; z: number; r: number; h: number; w: number; d: number; rot: number; colorIdx: number }[];
   tuning?: ChapterTuningDef;
   objectives: ObjectiveDef[];
+  actors?: ActorDef[];
+  boss?: BossDef;
   waves?: WaveDef[];
   shards?: ShardDef[];
   hazards?: HazardDef[];

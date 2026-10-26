@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   buildDrone,
   buildGali,
+  buildGarvaCar,
   buildShard,
   buildShilpi,
   buildSwatterProp,
@@ -12,7 +13,7 @@ import { ChaseCamera } from './camera';
 import { ParticlePool } from './particles';
 import type { ChapterDef } from '../content3/types';
 import type { World } from '../sim3d/flight';
-import { currentObjective, type StoryState } from '../sim3d/story';
+import { currentObjective, targetPosition, type StoryState } from '../sim3d/story';
 
 function isStoryState(source: World | StoryState): source is StoryState {
   return (source as StoryState).chapter !== undefined;
@@ -34,6 +35,10 @@ export class Stage {
   private hazardsGroup: THREE.Group | null = null;
   private readonly hazardMeshes: THREE.Object3D[] = [];
   private allyGroup: THREE.Group | null = null;
+  private actorGroup: THREE.Group | null = null;
+  private readonly actorMeshes = new Map<string, THREE.Group>();
+  private nodesGroup: THREE.Group | null = null;
+  private readonly nodeMeshes: { objectiveId: string; index: number; mesh: THREE.Group }[] = [];
   private marker: THREE.Group | null = null;
   private hubMode = false;
   private time = 0;
@@ -156,11 +161,17 @@ export class Stage {
     this.disposeGroup(this.shardsGroup);
     this.disposeGroup(this.hazardsGroup);
     this.disposeGroup(this.allyGroup);
+    this.disposeGroup(this.actorGroup);
+    this.disposeGroup(this.nodesGroup);
     this.worldGroup = null;
     this.shardsGroup = null;
     this.hazardsGroup = null;
     this.allyGroup = null;
+    this.actorGroup = null;
+    this.nodesGroup = null;
     this.shardMeshes.clear();
+    this.actorMeshes.clear();
+    this.nodeMeshes.length = 0;
     this.hazardMeshes.length = 0;
     this.lights.clear();
     this.marker!.visible = false;
@@ -168,20 +179,21 @@ export class Stage {
 
   private applyPalette(chapter: ChapterDef): void {
     this.scene.background = new THREE.Color(chapter.palette.sky);
-    const indoor = chapter.location === 'workshop';
-    this.scene.fog = new THREE.Fog(chapter.palette.fog, indoor ? 22 : 55, indoor ? 90 : 230);
+    const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(
+      chapter.location
+    );
+    this.scene.fog = new THREE.Fog(chapter.palette.fog, indoor ? 24 : 55, indoor ? 100 : 230);
     this.stars.visible = !indoor;
 
-    const hemi = new THREE.HemisphereLight(chapter.palette.fill, 0x1a1c28, indoor ? 1.3 : 1.7);
+    const hemi = new THREE.HemisphereLight(chapter.palette.fill, 0x1a1c28, indoor ? 1.45 : 1.7);
     this.lights.add(hemi);
-    const sun = new THREE.DirectionalLight(chapter.palette.key, indoor ? 2.1 : 3.0);
+    const sun = new THREE.DirectionalLight(chapter.palette.key, indoor ? 2.4 : 3.0);
     sun.position.set(40, 80, 20);
     this.lights.add(sun);
-    if (!indoor) {
-      const accent = new THREE.PointLight(chapter.palette.accent, 90, 110, 1.8);
-      accent.position.set(0, 16, -26);
-      this.lights.add(accent);
-    }
+
+    const accent = new THREE.PointLight(chapter.palette.accent, indoor ? 85 : 90, indoor ? 95 : 110, 1.8);
+    accent.position.set(0, indoor ? 19 : 16, indoor ? 0 : -26);
+    this.lights.add(accent);
   }
 
   loadChapter(chapter: ChapterDef): void {
@@ -231,17 +243,27 @@ export class Stage {
           })
         );
         mesh = column;
+      } else if (hazard.kind === 'smoke') {
+        mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(Math.max(1, hazard.radius * 0.55), 12, 9),
+          new THREE.MeshBasicMaterial({
+            color: 0x9aa8b8,
+            transparent: true,
+            opacity: 0.03,
+            depthWrite: false,
+            side: THREE.DoubleSide
+          })
+        );
       } else {
-        const glow = new THREE.Mesh(
-          new THREE.SphereGeometry(Math.max(1, hazard.radius * 0.5), 10, 8),
+        mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(Math.max(1, hazard.radius * 0.45), 10, 8),
           new THREE.MeshBasicMaterial({
             color: hazard.kind === 'lamp' ? 0xffc060 : 0xff6a3a,
             transparent: true,
-            opacity: 0.18,
+            opacity: hazard.kind === 'fire' ? 0.12 : 0.16,
             depthWrite: false
           })
         );
-        mesh = glow;
       }
       mesh.position.set(hazard.pos.x, hazard.pos.y, hazard.pos.z);
       hazards.add(mesh);
@@ -254,6 +276,39 @@ export class Stage {
       ally.rotation.y = 0;
       this.allyGroup = ally;
       this.scene.add(ally);
+    }
+
+    if (chapter.actors && chapter.actors.length > 0) {
+      const actors = new THREE.Group();
+      this.actorGroup = actors;
+      this.scene.add(actors);
+      for (const actor of chapter.actors) {
+        const mesh = buildGarvaCar();
+        const start = actor.path[0] ?? { x: 0, y: 0, z: 0 };
+        mesh.position.set(start.x, start.y, start.z);
+        mesh.rotation.y = -Math.PI / 2;
+        actors.add(mesh);
+        this.actorMeshes.set(actor.id, mesh);
+      }
+    }
+
+    const nodeObjectives = chapter.objectives.filter(
+      (objective) =>
+        (objective.kind === 'sabotage' || objective.kind === 'boss') && objective.targets?.length
+    );
+    if (nodeObjectives.length > 0) {
+      const nodes = new THREE.Group();
+      this.nodesGroup = nodes;
+      this.scene.add(nodes);
+      for (const objective of nodeObjectives) {
+        objective.targets!.forEach((target, index) => {
+          const mesh = buildShard(objective.kind === 'boss' ? 'eye' : 'lamp');
+          mesh.position.set(target.x, target.y, target.z);
+          mesh.scale.setScalar(1.25);
+          nodes.add(mesh);
+          this.nodeMeshes.push({ objectiveId: objective.id, index, mesh });
+        });
+      }
     }
 
     this.gali.visible = true;
@@ -330,6 +385,8 @@ export class Stage {
     if (!story) {
       this.shardMeshes.forEach((mesh) => (mesh.visible = false));
       this.hazardMeshes.forEach((mesh) => (mesh.visible = false));
+      this.actorMeshes.forEach((mesh) => (mesh.visible = false));
+      this.nodeMeshes.forEach((node) => (node.mesh.visible = false));
       if (this.allyGroup) this.allyGroup.visible = false;
       return;
     }
@@ -347,13 +404,38 @@ export class Stage {
       index++;
     }
 
+    for (const actor of story.actors) {
+      const mesh = this.actorMeshes.get(actor.id);
+      if (!mesh) continue;
+      mesh.position.set(actor.x, actor.y, actor.z);
+      mesh.visible = true;
+    }
+
+    const active = currentObjective(story);
+    for (const node of this.nodeMeshes) {
+      const visible = active?.id === node.objectiveId && node.index >= story.writeIndex;
+      node.mesh.visible = visible;
+      if (visible) node.mesh.rotation.y += 0.018;
+    }
+
     for (let i = 0; i < this.hazardMeshes.length; i++) {
       const mesh = this.hazardMeshes[i];
       const runtime = story.hazards[i];
       if (!runtime) continue;
-      mesh.visible = true;
-      mesh.position.set(runtime.x, runtime.y, runtime.z);
       const hazard = story.chapter.hazards![i];
+      mesh.position.set(runtime.x, runtime.y, runtime.z);
+      if (hazard.kind === 'fire') {
+        mesh.visible = runtime.active;
+        if (runtime.active) {
+          const pulse = 1 + Math.sin(this.time * 7 + i) * 0.12;
+          mesh.scale.setScalar(pulse);
+        }
+      } else if (hazard.kind === 'smoke') {
+        mesh.visible = true;
+        mesh.scale.setScalar(1 + Math.sin(this.time * 0.7 + i) * 0.06);
+      } else {
+        mesh.visible = true;
+      }
       if (hazard.kind === 'swatter' || hazard.kind === 'tweezer') {
         mesh.rotation.z = Math.sin(this.time * 2.2 + i) * 0.08;
       }
@@ -379,18 +461,7 @@ export class Stage {
       this.marker.visible = false;
       return;
     }
-
-    let target: { x: number; y: number; z: number } | null = null;
-    if (objective.kind === 'reach') target = objective.target ?? null;
-    if (objective.kind === 'write') target = objective.marks?.[story.writeIndex] ?? null;
-    if (objective.kind === 'collect') {
-      const shard = (story.chapter.shards ?? []).find((candidate) => !story.shards[candidate.id]);
-      if (shard) target = shard.pos;
-    }
-    if (objective.kind === 'destroy') {
-      const foe = story.world.foes.find((candidate) => candidate.alive);
-      if (foe) target = foe.pos;
-    }
+    const target = targetPosition(story, objective, story.writeIndex);
     if (!target) {
       this.marker.visible = false;
       return;

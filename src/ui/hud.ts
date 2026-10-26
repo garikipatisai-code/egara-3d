@@ -79,6 +79,8 @@ export interface Hud {
   setLives(lives: number): void;
   setParanoia(value: number): void;
   setFps(value: number): void;
+  setBoss(name: string, done: number, total: number): void;
+  hideBoss(): void;
   setMuted(muted: boolean): void;
   toast(text: string): void;
   onPause(handler: () => void): void;
@@ -110,6 +112,13 @@ export function createHud(): Hud {
   const pauseButton = el('button', 'hud-icon-button', actions);
   pauseButton.type = 'button';
   pauseButton.textContent = t('pause');
+
+  const bossBar = el('div', 'hud-boss', host);
+  bossBar.hidden = true;
+  bossBar.setAttribute('role', 'status');
+  const bossName = el('span', 'hud-boss-name', bossBar);
+  const bossTrack = el('div', 'hud-boss-track', bossBar);
+  const bossFill = el('i', 'hud-boss-fill', bossTrack);
 
   const screen = el('div', 'hud-screen', host);
   screen.hidden = true;
@@ -216,6 +225,16 @@ export function createHud(): Hud {
       background:rgb(16 13 24 / 92%);border:1px solid #e8b04b;border-radius:999px;
       padding:.5rem 1rem;color:#ffd75e;font-size:.9rem;pointer-events:none;max-width:80vw;text-align:center}
     .hud-toast[hidden]{display:none}
+    .hud-boss{position:absolute;top:3.1rem;left:50%;transform:translateX(-50%);
+      width:min(22rem,72vw);display:grid;gap:.3rem;justify-items:center;pointer-events:none;
+      text-shadow:0 1px 3px #000}
+    .hud-boss[hidden]{display:none}
+    .hud-boss-name{font-family:ui-monospace,monospace;font-size:.78rem;letter-spacing:.16em;
+      text-transform:uppercase;color:#ffb060}
+    .hud-boss-track{width:100%;height:.4rem;border-radius:99px;background:#2a1a1a;
+      border:1px solid #5a2a1a;overflow:hidden}
+    .hud-boss-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff7a3d,#ffd75e);
+      transition:width .2s linear}
     .hud-fatal{color:#f3ecdd;max-width:44rem}
     .hud-fatal h2{color:#e8b04b}
     .hud-touch{position:absolute;inset:0;pointer-events:none}
@@ -242,6 +261,9 @@ export function createHud(): Hud {
 
   const setBar = (visible: boolean) => {
     bar.hidden = !visible;
+  };
+  const hideBossBar = () => {
+    bossBar.hidden = true;
   };
 
   const clearScreen = () => {
@@ -276,6 +298,7 @@ export function createHud(): Hud {
   return {
     showTitle: ({ hasContinue, onStart, onContinue, onChapters, onLang, onMute }) => {
       setBar(false);
+      hideBossBar();
       const parent = openScreen();
       const wrap = addHeader(parent, 'Egara 3D', t('title'), t('tagline'));
       el('p', 'hud-sub', wrap).textContent = isTouch ? t('touchHint') : t('controls');
@@ -293,6 +316,7 @@ export function createHud(): Hud {
 
     showSelect: ({ cards, onPick, onBack, onLang, onMute }) => {
       setBar(false);
+      hideBossBar();
       const parent = openScreen();
       const wrap = el('div', 'hud-panel', parent);
       el('div', 'hud-kicker', wrap).textContent = t('chapterSelect');
@@ -313,7 +337,11 @@ export function createHud(): Hud {
         const meta = el('span', 'hud-chapter-meta', node);
         meta.textContent = card.locked
           ? t('locked')
-          : `${t('shards')} ${card.shards}/${card.total}${card.done ? ` · ${t('bestTime')} ${formatTime(card.bestTime)}` : ''}`;
+          : card.total > 0
+            ? `${t('shards')} ${card.shards}/${card.total}${card.done ? ` · ${t('bestTime')} ${formatTime(card.bestTime)}` : ''}`
+            : card.done
+              ? `${t('completed')} · ${t('bestTime')} ${formatTime(card.bestTime)}`
+              : '';
         grid.append(node);
       }
       const row = el('div', 'hud-actions-row', wrap);
@@ -327,6 +355,7 @@ export function createHud(): Hud {
 
     showBriefing: ({ chapter, onFly, onBack, onLang, onMute }) => {
       setBar(false);
+      hideBossBar();
       const parent = openScreen();
       const panel = el('div', 'hud-panel-card', parent);
       el('div', 'hud-kicker', panel).textContent = `${t('chapter')} ${chapter.order} · ${t('briefing')}`;
@@ -365,11 +394,13 @@ export function createHud(): Hud {
     showPlaying: () => {
       clearScreen();
       pauseButton.textContent = t('pause');
+      hideBossBar();
       setBar(true);
     },
 
     showPause: ({ onResume, onRestart, onChapters, onLang, onMute, shakeOn, onToggleShake }) => {
       pauseButton.textContent = t('pause');
+      hideBossBar();
       setBar(true);
       const parent = openScreen();
       const panel = el('div', 'hud-panel-card', parent);
@@ -392,6 +423,7 @@ export function createHud(): Hud {
 
     showDebrief: ({ chapter, result, nextTitle, onNext, onChapters, onLang }) => {
       setBar(false);
+      hideBossBar();
       const parent = openScreen();
       const panel = el('div', 'hud-panel-card', parent);
       el('div', 'hud-kicker', panel).textContent = t('chapterComplete');
@@ -447,6 +479,7 @@ export function createHud(): Hud {
 
     showFatal: (title, body, retry, onRetry) => {
       setBar(false);
+      hideBossBar();
       const parent = openScreen();
       const panel = el('div', 'hud-panel-card hud-fatal', parent);
       const heading = el('h2', '', panel);
@@ -474,6 +507,17 @@ export function createHud(): Hud {
     setFps: (value) => {
       fps.textContent = `${Math.round(value)} fps`;
     },
+    setBoss: (name, done, total) => {
+      if (total <= 0) {
+        bossBar.hidden = true;
+        return;
+      }
+      bossBar.hidden = false;
+      bossName.textContent = `${name} ${done}/${total}`;
+      bossBar.setAttribute('aria-label', `${name} ${done}/${total}`);
+      bossFill.style.width = `${Math.round((done / total) * 100)}%`;
+    },
+    hideBoss: hideBossBar,
     setMuted: (muted) => {
       currentMuted = muted;
       muteButton.textContent = muted ? t('unmute') : t('mute');

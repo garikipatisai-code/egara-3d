@@ -7,7 +7,17 @@ import type {
 } from './types';
 import type { Tuning } from '../sim3d/flight';
 
-export type { ChapterDef, ObjectiveDef, ShardDef, CardDef, HazardDef, LocalizedText } from './types';
+export type {
+  ChapterDef,
+  ObjectiveDef,
+  ShardDef,
+  CardDef,
+  HazardDef,
+  LocalizedText,
+  Vec3Data,
+  ActorDef,
+  BossDef
+} from './types';
 
 export const CHAPTERS = raw as ChapterDef[];
 
@@ -85,6 +95,18 @@ function checkObjective(objective: ObjectiveDef, chapterId: string, errors: stri
   if (objective.kind === 'destroy' && (objective.count ?? 0) <= 0) {
     errors.push(`${chapterId}/${objective.id}: destroy needs count`);
   }
+  if (objective.kind === 'escort') {
+    if (!objective.actorId) errors.push(`${chapterId}/${objective.id}: escort needs actorId`);
+    if ((objective.seconds ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: escort needs seconds`);
+    if ((objective.radius ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: escort needs radius`);
+  }
+  if (objective.kind === 'sabotage' || objective.kind === 'boss') {
+    if (!objective.targets || objective.targets.length < 2) {
+      errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs 2+ targets`);
+    }
+    if ((objective.count ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs count`);
+    if ((objective.radius ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs radius`);
+  }
 }
 
 function insideBounds(chapter: ChapterDef, x: number, y: number, z: number): boolean {
@@ -113,6 +135,17 @@ export function validateChapters(defs: ChapterDef[] = CHAPTERS): string[] {
     }
     if (chapter.objectives.length === 0) errors.push(`${chapter.id}: no objectives`);
 
+    if (chapter.boss) {
+      if (!hasText(chapter.boss.name)) errors.push(`${chapter.id}: boss name needs EN+TE`);
+      if (chapter.boss.nodes <= 0) errors.push(`${chapter.id}: boss needs nodes`);
+    }
+
+    for (const actor of chapter.actors ?? []) {
+      if (!actor.id) errors.push(`${chapter.id}: actor needs id`);
+      if (!actor.path || actor.path.length < 2) errors.push(`${chapter.id}/${actor.id}: actor needs a path`);
+      if (actor.speed <= 0) errors.push(`${chapter.id}/${actor.id}: actor needs speed`);
+    }
+
     const objectiveIds = new Set<string>();
     for (const objective of chapter.objectives) {
       if (objectiveIds.has(objective.id)) errors.push(`${chapter.id}: duplicate objective ${objective.id}`);
@@ -136,6 +169,12 @@ export function validateChapters(defs: ChapterDef[] = CHAPTERS): string[] {
     for (const hazard of chapter.hazards ?? []) {
       if (!insideBounds(chapter, hazard.pos.x, hazard.pos.y, hazard.pos.z)) {
         errors.push(`${chapter.id}/${hazard.id}: outside bounds`);
+      }
+      if (
+        hazard.activeAfterObjective !== undefined &&
+        (hazard.activeAfterObjective < 0 || hazard.activeAfterObjective >= chapter.objectives.length)
+      ) {
+        errors.push(`${chapter.id}/${hazard.id}: activeAfterObjective out of range`);
       }
     }
 

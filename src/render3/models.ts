@@ -341,6 +341,77 @@ export function buildTweezerProp(): THREE.Group {
   return tweezer;
 }
 
+/** The Diviner: a robed, masked ritualist. Original design, no likeness. */
+export function buildDiviner(): THREE.Group {
+  const diviner = new THREE.Group();
+  const robeColor = 0x4a1a1a;
+  const robe = mat(robeColor);
+  const skin = mat(0x8a5a3a);
+
+  const skirt = new THREE.Mesh(new THREE.ConeGeometry(6.4, 17, 10), robe);
+  skirt.position.y = 8.5;
+  diviner.add(skirt);
+
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 5.4, 8, 10), robe);
+  torso.position.y = 17;
+  diviner.add(torso);
+
+  const shoulders = new THREE.Mesh(new THREE.SphereGeometry(5.2, 10, 8), robe);
+  shoulders.scale.set(1, 0.42, 0.8);
+  shoulders.position.y = 21;
+  diviner.add(shoulders);
+
+  const hood = new THREE.Mesh(new THREE.SphereGeometry(4.4, 12, 10), robe);
+  hood.position.y = 24;
+  hood.scale.set(1, 1.1, 1);
+  diviner.add(hood);
+
+  const face = new THREE.Mesh(new THREE.SphereGeometry(3.1, 10, 8), skin);
+  face.position.set(0, 23.6, 2.2);
+  face.scale.set(0.9, 1, 0.6);
+  diviner.add(face);
+
+  const eyeMat = mat(0xffd75e, { emissive: 0xff9a3d, ei: 2.4 });
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.42, 6, 5), eyeMat);
+    eye.position.set(side * 1.2, 23.9, 4.4);
+    diviner.add(eye);
+  }
+  const third = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 5), eyeMat);
+  third.position.set(0, 24.8, 4.3);
+  diviner.add(third);
+
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 0.9, 11, 8), robe);
+    arm.position.set(side * 5.2, 18.5, 1.8);
+    arm.rotation.z = side * -0.45;
+    arm.rotation.x = -0.35;
+    diviner.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(1.3, 8, 6), skin);
+    hand.position.set(side * 7.6, 23.2, 3.2);
+    diviner.add(hand);
+  }
+
+  const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 24, 7), mat(0x2a1c14));
+  staff.position.set(8, 12, 1);
+  diviner.add(staff);
+  const staffRing = new THREE.Mesh(
+    new THREE.TorusGeometry(2.2, 0.22, 6, 16),
+    mat(0xe8b04b, { emissive: 0x8a5a10, ei: 0.8 })
+  );
+  staffRing.position.set(8, 25, 1);
+  staffRing.rotation.y = Math.PI / 2;
+  diviner.add(staffRing);
+
+  const beads = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.22, 5, 18), mat(0xd8b060));
+  beads.position.y = 20;
+  beads.rotation.x = Math.PI / 2;
+  diviner.add(beads);
+
+  diviner.name = 'diviner';
+  return diviner;
+}
+
 /** The glass wing on the Storyteller's bench. */
 export function buildGlassWing(): THREE.Group {
   const wing = new THREE.Group();

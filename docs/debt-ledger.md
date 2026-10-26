@@ -4,9 +4,12 @@ Deferred work, recorded so it is not lost. Not a promise; revisit at the named g
 
 | Item | Why deferred | Revisit |
 |---|---|---|
-| Chapters 4–8 (airport road, haunt/ledger, Diviner, Glass House, Cannon) | P1 gate is framework + chapters 1–3 | P2/P3 |
+| Chapters 7–8 (Glass House, Cannon) | P2 gate is chapters 4–6 | P3 |
 | Garva boss as four resource nodes | Needs paranoia/haunt systems first | P3 |
 | NG+ amulet effect | Needs 12 shards + epilogue | P3 |
+| Camera can clip into props/walls near arena bounds | No camera collision in P2 | P4 |
+| Airport Road at 114 draw calls (budget 120) | Barrier/lamp meshes are separate | P4 (merge/batch) |
+| Boss/sabotage markers overlap their world props | Functional, not yet art-directed | P4 |
 | Real-device fps run (mid-tier Android) | No device in this environment | P4 |
 | Remappable controls | Touch + keyboard defaults first | P4 |
 | Pointer-lock option | Drag-look is the accessible default | P4 |

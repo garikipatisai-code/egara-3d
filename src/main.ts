@@ -237,6 +237,16 @@ function syncHud(): void {
   hud.setShards(collectedShardIds(story).length, totalShards(story));
   hud.setLives(story.lives);
   hud.setParanoia(story.paranoia);
+  const boss = story.chapter.boss;
+  if (boss && objective?.kind === 'boss') {
+    hud.setBoss(
+      localized(boss.name),
+      Math.min(story.objectiveProgress, objective.count ?? boss.nodes),
+      objective.count ?? boss.nodes
+    );
+  } else {
+    hud.hideBoss();
+  }
 }
 
 function handleEvents(events: StoryEvent[]): void {
@@ -275,6 +285,11 @@ function handleEvents(events: StoryEvent[]): void {
     } else if (event.type === 'write') {
       stage.burst(runtime.story?.world.player.pos.x ?? 0, runtime.story?.world.player.pos.y ?? 0, runtime.story?.world.player.pos.z ?? 0, false);
       audio.play('sting');
+    } else if (event.type === 'node') {
+      const pos = runtime.story?.world.player.pos;
+      if (pos) stage.burst(pos.x, pos.y, pos.z, true);
+      stage.punch();
+      audio.play('hit');
     } else if (event.type === 'complete') {
       audio.play('win');
     }

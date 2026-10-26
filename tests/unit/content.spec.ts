@@ -12,7 +12,14 @@ describe('chapter content', () => {
   it('is valid, with eight chapters and a contiguous enabled prefix', () => {
     expect(validateChapters()).toEqual([]);
     expect(CHAPTERS).toHaveLength(8);
-    expect(enabledChapters().map((chapter) => chapter.id)).toEqual(['ch1', 'ch2', 'ch3']);
+    expect(enabledChapters().map((chapter) => chapter.id)).toEqual([
+      'ch1',
+      'ch2',
+      'ch3',
+      'ch4',
+      'ch5',
+      'ch6'
+    ]);
   });
 
   it('has twelve memory shards across the enabled chapters', () => {
@@ -39,6 +46,26 @@ describe('chapter content', () => {
 
   it('never ships the film title in content', () => {
     expect(JSON.stringify(CHAPTERS).toLowerCase()).not.toContain('eega');
+  });
+
+  it('declares the P2 actors, pillars and boss', () => {
+    const airport = getChapter('ch4');
+    expect(airport?.actors?.[0].id).toBe('car');
+    expect(airport?.objectives.map((objective) => objective.kind)).toEqual([
+      'escort',
+      'write',
+      'survive',
+      'reach'
+    ]);
+    expect(airport?.hazards?.some((hazard) => hazard.kind === 'fire')).toBe(true);
+
+    const house = getChapter('ch5');
+    expect(house?.objectives[1].kind).toBe('sabotage');
+    expect(house?.objectives[1].targets).toHaveLength(3);
+
+    const diviner = getChapter('ch6');
+    expect(diviner?.boss?.nodes).toBe(3);
+    expect(diviner?.objectives[0].kind).toBe('boss');
   });
 
   it('merges chapter tuning over the baseline', () => {

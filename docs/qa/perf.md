@@ -5,31 +5,33 @@ gameplay under 20 s on throttled 4G. Draw calls below 120; no per-frame
 allocation in the sim, particle pool or HUD loop. Adaptive render scale
 0.65–1.0 keeps frame time bounded on weak GPUs.
 
-## Automated gate (P1)
+## Automated gate (P2)
 
 ```sh
-npx vitest run tests/unit      # 45 tests
-npx tsc --noEmit               # clean
-npm run build                  # 627 KB raw / 166.6 KB gzip total
-npx playwright test tests/smoke # 7 passed, 1 skipped (live)
+npx vitest run tests/unit       # 54 tests
+npx tsc --noEmit                # clean
+npm run build                   # 644 KB raw / 171 KB gzip total
+npx playwright test tests/smoke # 9 passed, 1 skipped (live)
 ```
 
-Bundle split: three.js ~129 KB gzip; game code ~37 KB gzip. Budget for app code
+Bundle split: three.js ~129 KB gzip; game code ~42 KB gzip. Budget for app code
 (excluding three) is 200 KB gzip.
 
 ## Headless run — Chromium SwiftShader, 960×540
 
-Measured after 4.5 s of play; adaptive scale settles automatically.
+Measured after 3.5 s of play; adaptive scale settles automatically. Chapters 5
+and 6 include a short climb before the sample.
 
 | Scene | FPS | Draw calls | Render scale | Notes |
 |---|---|---|---|---|
-| Ch.1 Punnami Lane | 54 | 59 | 0.85 | software GL; real GPU expected higher |
-| Ch.3 Shilpi's workshop | 56 | 64 | 0.65 | heaviest fill scene; adaptive scale floor |
-| P0 greybox baseline | 46–60 | — | 1.00 | previous gate, same machine |
+| Ch.1 Punnami Lane | 50 | 59 | 0.90 | software GL |
+| Ch.3 Shilpi's workshop | 52 | 64 | 0.90 | fill-heavy interior |
+| Ch.4 Airport Road | 60 | 114 | 1.00 | near the 120 draw-call budget |
+| Ch.5 Garva House | 60 | 31 | 1.00 | atrium + pillars |
+| Ch.6 Diviner room | 60 | 28 | 1.00 | boss + ritual effects |
 
 Software rasterisation is the limiting factor; these numbers are a floor, not a
-device claim. The adaptive scaler targets <48 fps down, >57 fps up, so a
-capable GPU stays at 1.0.
+device claim. The adaptive scaler targets <48 fps down, >57 fps up.
 
 ## Manual protocol (each release)
 
@@ -47,6 +49,9 @@ capable GPU stays at 1.0.
 
 | Build | Device | CPU/GPU | Min FPS | Avg FPS | Draw calls | Scale | Notes |
 |---|---|---|---|---|---|---|---|
-| P1 | headless Chromium | SwiftShader | 54 | 54 | 59 | 0.85 | ch.1 lane |
-| P1 | headless Chromium | SwiftShader | 56 | 56 | 64 | 0.65 | ch.3 workshop |
-| P1 | mid-tier Android | — | — | — | — | — | device run pending (debt) |
+| P2 | headless Chromium | SwiftShader | 50 | 50 | 59 | 0.90 | ch.1 lane |
+| P2 | headless Chromium | SwiftShader | 52 | 52 | 64 | 0.90 | ch.3 workshop |
+| P2 | headless Chromium | SwiftShader | 60 | 60 | 114 | 1.00 | ch.4 airport road |
+| P2 | headless Chromium | SwiftShader | 60 | 60 | 31 | 1.00 | ch.5 Garva House |
+| P2 | headless Chromium | SwiftShader | 60 | 60 | 28 | 1.00 | ch.6 Diviner |
+| P2 | mid-tier Android | — | — | — | — | — | device run pending (debt) |
