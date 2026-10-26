@@ -12,7 +12,7 @@ Gate: active (owner direction 2026-10-26T19:40:00Z)
 | 4 Gali + effects | done | segmented fly, double iridescent wings, wing blur, eye glints, antennae; trail/boost lines |
 | 5 Environment detail | done | facade AC/awnings/tank/sign/puddles/bins; specimen jars/spools/magnifier; rug/paintings/plants/glassware; airport sign/reflectors |
 | 6 Quality + e2e | done | High/Low toggle persisted, auto-fallback <50 fps, 13 smoke |
-| 7 Perf, docs, deploy | in progress | 74 unit, tsc clean, 181 KB gz, 13 smoke; deploy pending |
+| 7 Perf, docs, deploy | done | 74 unit, tsc clean, 181 KB gz, 13 smoke, Pages success, live 200 + live smoke |
 
 ## Log
 
@@ -21,4 +21,5 @@ Gate: active (owner direction 2026-10-26T19:40:00Z)
 - 2026-10-26T20:40Z — T3 green: textures/materials/sky/shadows/glow/grade.
 - 2026-10-26T21:00Z — T4/T5 green: Gali redesign, trail, environment detail.
 - 2026-10-26T21:10Z — T6 green: quality toggle + auto-fallback; 13 smoke.
-- 2026-10-26T21:12Z — Perf: low 46–54 fps / 70–83 calls at 0.55; high 21–33 fps / 115–134 calls with shadows; auto-fallback works. Bundle 181 KB gz. Remaining: deploy + live + close.
+- 2026-10-26T21:12Z — Perf: low 45–54 fps / 70–83 calls at 0.50–0.55; high 21–33 fps / 115–134 calls with shadows; auto-fallback works. Bundle 181 KB gz.
+- 2026-10-26T21:47Z — Deployed; Pages success; live 200 + live smoke; lane/cannon live checks error-free. P4 complete.
