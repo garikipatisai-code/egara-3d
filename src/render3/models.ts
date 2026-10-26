@@ -263,6 +263,13 @@ export function buildGarvaCar(): THREE.Group {
     );
     light.position.set(8.3, 2.4, side * 2.1);
     car.add(light);
+
+    const tail = new THREE.Mesh(
+      new THREE.SphereGeometry(0.48, 8, 6),
+      mat(0xff3a2a, { emissive: 0xff2a1a, ei: 2.4 })
+    );
+    tail.position.set(-6.6, 2.6, side * 2.1);
+    car.add(tail);
   }
 
   car.name = 'garva-car';
