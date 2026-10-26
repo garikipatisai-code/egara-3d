@@ -24,3 +24,22 @@ test('boots to title and flies without errors', async ({ page }) => {
   expect(score).toMatch(/Score \d+/);
   expect(errors).toEqual([]);
 });
+
+test('mouse drag looks around and wheel zooms without errors', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Fly' }).click();
+
+  await page.mouse.move(480, 270);
+  await page.mouse.down();
+  await page.mouse.move(680, 200, { steps: 10 });
+  await page.mouse.up();
+  await page.mouse.wheel(0, 240);
+  await page.mouse.wheel(0, -120);
+  await page.waitForTimeout(1500);
+
+  await expect(page.locator('canvas')).toBeVisible();
+  expect(errors).toEqual([]);
+});

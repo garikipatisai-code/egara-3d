@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { buildArena, buildDrone, buildGali } from './models';
 import { ChaseCamera } from './camera';
 import { ParticlePool } from './particles';
+import type { Building } from '../sim3d/arena';
 import type { World } from '../sim3d/flight';
 
 /** Owns everything three.js: scene, lights, actors, camera, particles. */
@@ -15,7 +16,7 @@ export class Stage {
   private time = 0;
   private drawCalls = 0;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, layout: Building[]) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -51,7 +52,7 @@ export class Stage {
     ember.position.set(0, 14, -40);
     this.scene.add(ember);
 
-    this.scene.add(buildArena());
+    this.scene.add(buildArena(layout));
 
     this.gali = buildGali();
     this.scene.add(this.gali);
@@ -113,6 +114,14 @@ export class Stage {
   punch(): void {
     this.chase.addShake(0.45);
     this.chase.punchFov();
+  }
+
+  look(dx: number, dy: number): void {
+    this.chase.addLook(dx, dy);
+  }
+
+  zoom(delta: number): void {
+    this.chase.addZoom(delta);
   }
 
   hurtShake(): void {

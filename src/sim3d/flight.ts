@@ -1,3 +1,5 @@
+import type { Building } from './arena';
+
 export const STEP = 1 / 60;
 export const MAX_STEPS = 5;
 export const MAX_FRAME_DELTA = 0.25;
@@ -11,7 +13,7 @@ export interface Vec3 {
 }
 
 export interface FlyInput {
-  /** Yaw left (-) / right (+), -1..1. */
+  /** Yaw right (+) / left (-), -1..1. Positive turns to screen-right. */
   turn: number;
   /** Descend (-) / climb (+), -1..1. */
   climb: number;
@@ -69,6 +71,7 @@ export interface World {
   waveTimer: number;
   player: Player;
   foes: Foe[];
+  solids: Building[];
   outcome: Outcome;
 }
 
@@ -83,7 +86,7 @@ function emptyFoe(): Foe {
   };
 }
 
-export function createWorld(seed: number, tuning: Tuning): World {
+export function createWorld(seed: number, tuning: Tuning, solids: Building[] = []): World {
   return {
     tuning,
     seed,
@@ -103,7 +106,8 @@ export function createWorld(seed: number, tuning: Tuning): World {
       invulnFrames: 0,
       cooldownFrames: 0
     },
-    foes: Array.from({ length: tuning.pools.foes }, emptyFoe)
+    foes: Array.from({ length: tuning.pools.foes }, emptyFoe),
+    solids
   };
 }
 
@@ -151,7 +155,7 @@ function dist3(a: Vec3, b: Vec3): number {
 function stepPlayer(world: World, input: FlyInput): void {
   const { player, tuning } = world;
 
-  player.yaw += clamp(input.turn, -1, 1) * tuning.player.yawRate * STEP;
+  player.yaw -= clamp(input.turn, -1, 1) * tuning.player.yawRate * STEP;
   player.pitch = clamp(
     player.pitch + clamp(input.climb, -1, 1) * 1.6 * STEP,
     -tuning.player.pitchLimit,
@@ -170,6 +174,17 @@ function stepPlayer(world: World, input: FlyInput): void {
   if (r > tuning.arenaRadius) {
     player.pos.x *= tuning.arenaRadius / r;
     player.pos.z *= tuning.arenaRadius / r;
+  }
+
+  for (const solid of world.solids) {
+    if (player.pos.y > solid.h + tuning.player.radius) continue;
+    const dx = player.pos.x - solid.x;
+    const dz = player.pos.z - solid.z;
+    const reach = solid.r + tuning.player.radius;
+    const dist = Math.hypot(dx, dz);
+    if (dist >= reach || dist === 0) continue;
+    player.pos.x = solid.x + (dx / dist) * reach;
+    player.pos.z = solid.z + (dz / dist) * reach;
   }
 
   if (player.invulnFrames > 0) player.invulnFrames--;

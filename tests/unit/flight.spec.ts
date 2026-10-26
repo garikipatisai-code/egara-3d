@@ -43,11 +43,11 @@ describe('3d flight sim', () => {
     expect(hashWorld(a)).toBe(hashWorld(b));
   });
 
-  it('turns and climbs within limits', () => {
+  it('turns right toward screen-right and climbs within limits', () => {
     const world = createWorld(1, tuning);
     const yaw0 = world.player.yaw;
     runFrames(world, 60, { turn: 1, climb: 0, boost: false, sting: false });
-    expect(world.player.yaw).toBeGreaterThan(yaw0);
+    expect(world.player.yaw).toBeLessThan(yaw0);
 
     const up = createWorld(2, tuning);
     runFrames(up, 600, { turn: 0, climb: 1, boost: false, sting: false });

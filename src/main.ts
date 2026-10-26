@@ -1,4 +1,5 @@
 import { advance, createWorld, type Tuning, type World } from './sim3d/flight';
+import { buildArenaLayout } from './sim3d/arena';
 import { Stage } from './render3/stage';
 import { InputMap } from './core/input';
 import { AudioController } from './core/audio';
@@ -27,9 +28,12 @@ const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const hud = createHud();
 const input = new InputMap();
 
+const ARENA_SEED = 7;
+const solids = buildArenaLayout(ARENA_SEED);
+
 let stage: Stage;
 try {
-  stage = new Stage(canvas);
+  stage = new Stage(canvas, solids);
 } catch {
   hud.showMenu('WebGL unavailable', 'Egara 3D needs WebGL. Please try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration on.', [
     { label: 'Retry', action: () => window.location.reload() }
@@ -37,6 +41,31 @@ try {
   throw new Error('Egara 3D requires WebGL');
 }
 input.attach(window);
+
+let dragging = false;
+let lastPX = 0;
+let lastPY = 0;
+canvas.addEventListener('pointerdown', (event) => {
+  dragging = true;
+  lastPX = event.clientX;
+  lastPY = event.clientY;
+  canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener('pointermove', (event) => {
+  if (!dragging) return;
+  stage.look(event.clientX - lastPX, event.clientY - lastPY);
+  lastPX = event.clientX;
+  lastPY = event.clientY;
+});
+const endDrag = () => {
+  dragging = false;
+};
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  stage.zoom(event.deltaY > 0 ? 0.08 : -0.08);
+}, { passive: false });
 
 let save = loadSave();
 const audio = new AudioController({
@@ -49,7 +78,7 @@ const audio = new AudioController({
 hud.setMuted(save.muted);
 hud.onMute(() => hud.setMuted(audio.toggleMute()));
 
-let world: World = createWorld(randomSeed(), TUNING);
+let world: World = createWorld(randomSeed(), TUNING, solids);
 let acc = 0;
 let last = performance.now();
 let paused = true;
@@ -60,7 +89,7 @@ let frames = 0;
 let fpsTime = 0;
 
 function startRun(): void {
-  world = createWorld(randomSeed(), TUNING);
+  world = createWorld(randomSeed(), TUNING, solids);
   acc = 0;
   paused = false;
   ended = false;

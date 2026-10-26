@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { Building } from '../sim3d/arena';
 
 /** Procedural low-poly models. Zero downloads, all original. */
 
@@ -109,8 +110,8 @@ export function buildDrone(): THREE.Group {
   return drone;
 }
 
-/** Greybox street canyon: ground disc + scattered building blocks. */
-export function buildArena(): THREE.Group {
+/** Greybox street canyon built from the shared sim layout: what you see is solid. */
+export function buildArena(layout: Building[]): THREE.Group {
   const arena = new THREE.Group();
 
   const ground = new THREE.Mesh(
@@ -129,24 +130,14 @@ export function buildArena(): THREE.Group {
   arena.add(ring);
 
   const palette = [0x3a4a6e, 0x4a3a5e, 0x3a5a4e, 0x5a4a3a];
-  let seed = 7;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-  for (let i = 0; i < 26; i++) {
-    const w = 6 + rand() * 10;
-    const h = 8 + rand() * 26;
-    const d = 6 + rand() * 10;
-    const angle = rand() * Math.PI * 2;
-    const radius = 45 + rand() * 65;
-    const block = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d),
-      mat(palette[i % palette.length])
+  for (const block of layout) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(block.w, block.h, block.d),
+      mat(palette[block.colorIdx % palette.length])
     );
-    block.position.set(Math.cos(angle) * radius, h / 2, Math.sin(angle) * radius);
-    block.rotation.y = rand() * Math.PI;
-    arena.add(block);
+    mesh.position.set(block.x, block.h / 2, block.z);
+    mesh.rotation.y = block.rot;
+    arena.add(mesh);
   }
 
   return arena;

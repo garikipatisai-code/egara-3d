@@ -6,10 +6,25 @@ export class ChaseCamera {
   private shake = 0;
   private fovKick = 0;
   private readonly baseFov = 62;
+  private lookYaw = 0;
+  private lookPitch = 0;
+  private dist = 1;
+  private readonly baseBack = 11;
+  private readonly baseUp = 5.2;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(this.baseFov, aspect, 0.1, 600);
     this.camera.position.set(0, 8, 16);
+  }
+
+  /** Drag-to-look, like popular 3D games. dx/dy are pixels. */
+  addLook(dx: number, dy: number): void {
+    this.lookYaw -= dx * 0.005;
+    this.lookPitch = THREE.MathUtils.clamp(this.lookPitch - dy * 0.004, -0.7, 0.7);
+  }
+
+  addZoom(delta: number): void {
+    this.dist = THREE.MathUtils.clamp(this.dist + delta, 0.6, 1.6);
   }
 
   addShake(amount: number): void {
@@ -24,13 +39,14 @@ export class ChaseCamera {
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.fovKick = Math.max(0, this.fovKick - dt * 3);
 
-    const back = 11;
-    const up = 5.2;
-    const fx = Math.sin(yaw);
-    const fz = Math.cos(yaw);
+    const look = yaw + this.lookYaw;
+    const back = this.baseBack * this.dist;
+    const up = this.baseUp * this.dist;
+    const fx = Math.sin(look);
+    const fz = Math.cos(look);
     const desired = new THREE.Vector3(
       target.x - fx * back,
-      target.y + up - pitch * 6,
+      target.y + up + this.lookPitch * 10 - pitch * 6,
       target.z - fz * back
     );
     const k = 1 - Math.exp(-dt * 5);
@@ -38,7 +54,7 @@ export class ChaseCamera {
 
     const ahead = new THREE.Vector3(
       target.x + fx * 8,
-      target.y + Math.sin(pitch) * 8,
+      target.y + Math.sin(pitch + this.lookPitch) * 8,
       target.z + fz * 8
     );
     this.camera.lookAt(ahead);
