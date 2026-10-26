@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { clearCameraTarget } from '../sim3d/collision';
+import type { Building } from '../sim3d/arena';
 
 /** Chase camera: behind + above, look-ahead, lerp follow, shake, FOV punch. */
 export class ChaseCamera {
@@ -35,7 +37,15 @@ export class ChaseCamera {
     this.fovKick = 1;
   }
 
-  update(dt: number, target: THREE.Vector3, yaw: number, pitch: number): void {
+  update(
+    dt: number,
+    target: THREE.Vector3,
+    yaw: number,
+    pitch: number,
+    roll = 0,
+    boost = false,
+    solids: Building[] = []
+  ): void {
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.fovKick = Math.max(0, this.fovKick - dt * 3);
 
@@ -44,12 +54,18 @@ export class ChaseCamera {
     const up = this.baseUp * this.dist;
     const fx = Math.sin(look);
     const fz = Math.cos(look);
-    const desired = new THREE.Vector3(
-      target.x - fx * back,
-      target.y + up + this.lookPitch * 10 - pitch * 6,
-      target.z - fz * back
+    const wanted = {
+      x: target.x - fx * back,
+      y: target.y + up + this.lookPitch * 10 - pitch * 6,
+      z: target.z - fz * back
+    };
+    const cleared = clearCameraTarget(
+      { x: target.x, y: target.y, z: target.z },
+      wanted,
+      solids
     );
-    const k = 1 - Math.exp(-dt * 5);
+    const desired = new THREE.Vector3(cleared.x, cleared.y, cleared.z);
+    const k = 1 - Math.exp(-dt * 6);
     this.camera.position.lerp(desired, k);
 
     const ahead = new THREE.Vector3(
@@ -57,6 +73,8 @@ export class ChaseCamera {
       target.y + Math.sin(pitch + this.lookPitch) * 8,
       target.z + fz * 8
     );
+    const bank = roll * 0.32;
+    this.camera.up.set(Math.sin(bank), Math.cos(bank), 0);
     this.camera.lookAt(ahead);
 
     if (this.shake > 0) {
@@ -65,7 +83,7 @@ export class ChaseCamera {
       this.camera.position.y += (Math.random() - 0.5) * s;
     }
 
-    const fov = this.baseFov + this.fovKick * 9;
+    const fov = this.baseFov + this.fovKick * 9 + (boost ? 4 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.01) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();

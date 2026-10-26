@@ -21,4 +21,20 @@ body {
   pointer-events: none;
   color: #f3ecdd;
   font-family: system-ui, sans-serif;
+  z-index: 10;
+}
+
+/* Cinematic grade: vignette, warm/cool split, film grain. No GPU pass. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse at 50% 44%, transparent 34%, rgb(3 4 8 / 52%) 100%),
+    linear-gradient(118deg, rgb(38 76 132 / 9%), transparent 46%, rgb(255 138 58 / 7%)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  background-size: auto, auto, 120px 120px;
+  opacity: 0.85;
 }

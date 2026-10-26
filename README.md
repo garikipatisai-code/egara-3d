@@ -12,12 +12,26 @@ airport road, a glass house, and the people who loom over them.
 npm install
 npm run dev        # local dev server
 npm run build      # static build in dist/
-npm test           # unit tests (Vitest, 61)
-npx playwright test tests/smoke   # e2e smoke + story flow (12 + live)
+npm test           # unit tests (Vitest, 74)
+npx playwright test tests/smoke   # e2e smoke + story flow (13 + live)
 ```
 
 Note: `npm run test:e2e` currently also collects unit specs (pre-existing
 Playwright `testDir`); use the explicit smoke path above.
+
+## Feel & visuals (P4)
+
+- **Flight:** inertial acceleration/drag, speed-dependent turn, banking,
+  climb/dive speed trade, smoothed input.
+- **Collision:** rotated-box slide with speed loss + bump sparks, arena edge
+  response, and a camera that pulls in before walls.
+- **Look:** procedural textures (concrete/asphalt/wood/marble/fabric/metal/
+  windows), gradient sky + moon, textured lighting, adaptive shadows, fake glow
+  halos, wing trail/boost lines, a redesigned Gali, facade/roadside/workshop/
+  house/ritual detail, and a CSS vignette/grain grade.
+- **Quality:** pause → Graphics: High/Low. High adds a shadow map and glow;
+  low disables them and renders at a lower scale. Auto-fallback switches to low
+  after one second under 50 fps; the setting persists.
 
 ## Controls
 
@@ -64,5 +78,7 @@ docs/         specs, plans, research/world bible, QA
 - P1 plan: `docs/plans/2026-10-26-story-p1.md`
 - P2 plan: `docs/plans/2026-10-26-story-p2.md`
 - P3 plan: `docs/plans/2026-10-26-story-p3.md`
+- P4 feel/visual spec: `docs/specs/2026-10-26-feel-visual.md`
+- P4 plan: `docs/plans/2026-10-26-polish-p4.md`
 - Performance: `docs/qa/perf.md`
 - Debt: `docs/debt-ledger.md`

@@ -24,6 +24,7 @@ export class ParticlePool {
   private readonly geo = new THREE.BufferGeometry();
   private readonly pos: Float32Array;
   private readonly col: Float32Array;
+  private readonly colorCache = new Map<number, THREE.Color>();
   readonly points: THREE.Points;
 
   constructor() {
@@ -35,7 +36,7 @@ export class ParticlePool {
     this.geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
     this.geo.setAttribute('color', new THREE.BufferAttribute(this.col, 3));
     const material = new THREE.PointsMaterial({
-      size: 0.55,
+      size: 0.18,
       vertexColors: true,
       transparent: true,
       opacity: 0.95,
@@ -63,6 +64,43 @@ export class ParticlePool {
       part.vy = Math.cos(phi) * v;
       part.vz = Math.sin(phi) * Math.sin(theta) * v;
       part.life = life * (0.7 + Math.random() * 0.6);
+      part.maxLife = part.life;
+      part.r = c.r;
+      part.g = c.g;
+      part.b = c.b;
+      spawned++;
+    }
+  }
+
+  /** Short ribbon behind the fly; count 1-4 per frame is enough. */
+  trail(
+    x: number,
+    y: number,
+    z: number,
+    dx: number,
+    dy: number,
+    dz: number,
+    color: number,
+    count = 2,
+    life = 0.42
+  ): void {
+    let c = this.colorCache.get(color);
+    if (!c) {
+      c = new THREE.Color(color);
+      this.colorCache.set(color, c);
+    }
+    let spawned = 0;
+    for (const part of this.parts) {
+      if (spawned >= count) break;
+      if (part.alive) continue;
+      part.alive = true;
+      part.x = x + (Math.random() - 0.5) * 0.18;
+      part.y = y + (Math.random() - 0.5) * 0.18;
+      part.z = z + (Math.random() - 0.5) * 0.18;
+      part.vx = -dx * (1.4 + Math.random() * 1.4) + (Math.random() - 0.5) * 0.5;
+      part.vy = -dy * (1.4 + Math.random() * 1.4) + (Math.random() - 0.5) * 0.5;
+      part.vz = -dz * (1.4 + Math.random() * 1.4) + (Math.random() - 0.5) * 0.5;
+      part.life = life * (0.7 + Math.random() * 0.5);
       part.maxLife = part.life;
       part.r = c.r;
       part.g = c.g;

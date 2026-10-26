@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { mat } from './models';
+import { textured, windowMaterial } from './materials';
+import { labelTexture } from './textures';
+import { glowSprite } from './glow';
 import type { Building } from '../sim3d/arena';
 
 /** Hand-built props. All procedural, all original, zero downloads. */
@@ -42,13 +45,19 @@ export function buildNeedle(): THREE.Group {
 
 export function buildMatchbox(): THREE.Group {
   const box = new THREE.Group();
-  const sleeve = new THREE.Mesh(new THREE.BoxGeometry(8, 3.4, 5.6), mat(0x8a3a2a));
+  const sleeve = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 3.4, 5.6),
+    textured('paper', 0x8a3a2a, { repeatX: 2, repeatY: 1, roughness: 0.9 })
+  );
   sleeve.position.y = 1.7;
   box.add(sleeve);
-  const tray = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.6, 5), mat(0xd8c8a8));
+  const tray = new THREE.Mesh(
+    new THREE.BoxGeometry(7.2, 1.6, 5),
+    textured('paper', 0xd8c8a8, { roughness: 0.95 })
+  );
   tray.position.y = 1.2;
   box.add(tray);
-  const label = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.8), mat(0xf0d8a0));
+  const label = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.8), textured('paper', 0xf0d8a0));
   label.position.set(0, 2.2, 2.82);
   box.add(label);
   box.name = 'matchbox';
@@ -81,7 +90,10 @@ export function buildMug(): THREE.Group {
 
 export function buildPencil(): THREE.Group {
   const pencil = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 11, 6), mat(0xd8a020));
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.55, 0.55, 11, 12),
+    textured('wood', 0xd8a020, { repeatX: 1, repeatY: 4, roughness: 0.7 })
+  );
   body.rotation.z = Math.PI / 2;
   pencil.add(body);
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.4, 6), mat(0x2a1c14));
@@ -100,10 +112,7 @@ export function buildSatelliteDish(): THREE.Group {
   const dish = new THREE.Group();
   const face = new THREE.Mesh(
     new THREE.SphereGeometry(5, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2.6),
-    new THREE.MeshLambertMaterial({
-      color: 0xb8c0cc,
-      side: THREE.DoubleSide
-    })
+    textured('metal', 0xb8c0cc, { roughness: 0.45, metalness: 0.55, repeatX: 2, repeatY: 2 })
   );
   face.rotation.x = Math.PI / 2;
   face.position.y = 5;
@@ -124,16 +133,14 @@ export function buildSatelliteDish(): THREE.Group {
 
 export function buildWindowFrame(width = 12, height = 14): THREE.Group {
   const frame = new THREE.Group();
-  const backing = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.35), mat(0x3a2a22));
+  const backing = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, 0.35),
+    textured('wood', 0x3a2a22, { repeatX: 2, repeatY: 2, roughness: 0.85 })
+  );
   frame.add(backing);
   const pane = new THREE.Mesh(
     new THREE.PlaneGeometry(width - 1, height - 1),
-    new THREE.MeshBasicMaterial({
-      color: 0xffc978,
-      transparent: true,
-      opacity: 0.32,
-      side: THREE.DoubleSide
-    })
+    windowMaterial(0xffd8a0)
   );
   pane.position.z = 0.2;
   frame.add(pane);
@@ -143,7 +150,7 @@ export function buildWindowFrame(width = 12, height = 14): THREE.Group {
 
 export function buildBalcony(width = 13): THREE.Group {
   const balcony = new THREE.Group();
-  const stone = mat(0x5a5660);
+  const stone = textured('concrete', 0x5a5660, { repeatX: 4, repeatY: 1, roughness: 0.95 });
   const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.6, 5), stone);
   balcony.add(slab);
   const rail = new THREE.Mesh(new THREE.BoxGeometry(width, 0.18, 0.18), mat(0x2a2630));
@@ -211,7 +218,7 @@ export function buildRoad(width = 16, length = 190): THREE.Group {
   const road = new THREE.Group();
   const asphalt = new THREE.Mesh(
     new THREE.PlaneGeometry(width, length),
-    new THREE.MeshLambertMaterial({ color: 0x14161c, })
+    textured('asphalt', 0x6a6a70, { repeatX: 4, repeatY: 42, roughness: 0.98 })
   );
   asphalt.rotation.x = -Math.PI / 2;
   asphalt.position.y = 0.02;
@@ -265,10 +272,69 @@ export function buildDustField(count = 260, radius = 26): THREE.Points {
   );
 }
 
+export function buildSign(text: string, width = 10, height = 2.5): THREE.Group {
+  const sign = new THREE.Group();
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(width + 0.5, height + 0.5, 0.35),
+    textured('metal', 0x2a2e38, { roughness: 0.5, metalness: 0.5 })
+  );
+  sign.add(frame);
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, height),
+    new THREE.MeshBasicMaterial({ map: labelTexture(text) })
+  );
+  face.position.z = 0.2;
+  sign.add(face);
+  const halo = glowSprite(0xffb060, width * 1.4, 0.16);
+  halo.position.z = -0.3;
+  sign.add(halo);
+  sign.name = 'sign';
+  return sign;
+}
+
+export function buildACUnit(): THREE.Group {
+  const unit = new THREE.Group();
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(3.4, 2.2, 1.5),
+    textured('metal', 0x8a94a4, { roughness: 0.6, metalness: 0.35 })
+  );
+  unit.add(box);
+  const fan = new THREE.Mesh(
+    new THREE.TorusGeometry(0.72, 0.12, 5, 14),
+    textured('metal', 0x3a3e48, { roughness: 0.5, metalness: 0.5 })
+  );
+  fan.position.z = 0.8;
+  unit.add(fan);
+  unit.name = 'ac-unit';
+  return unit;
+}
+
+export function buildPuddle(radius = 3): THREE.Mesh {
+  const puddle = new THREE.Mesh(
+    new THREE.CircleGeometry(radius, 18),
+    new THREE.MeshStandardMaterial({
+      color: 0x0a1420,
+      roughness: 0.08,
+      metalness: 0.65,
+      transparent: true,
+      opacity: 0.55
+    })
+  );
+  puddle.rotation.x = -Math.PI / 2;
+  puddle.position.y = 0.055;
+  puddle.name = 'puddle';
+  return puddle;
+}
+
 export function buildCannon(): THREE.Group {
   const cannon = new THREE.Group();
-  const brass = mat(0xb08a3a, { emissive: 0x3a2a08, ei: 0.3 });
-  const wood = mat(0x3a2418);
+  const brass = textured('metal', 0xb08a3a, {
+    roughness: 0.35,
+    metalness: 0.65,
+    emissive: 0x3a2a08,
+    emissiveIntensity: 0.25
+  });
+  const wood = textured('wood', 0x3a2418, { repeatX: 2, repeatY: 2, roughness: 0.9 });
 
   const base = new THREE.Mesh(new THREE.BoxGeometry(7, 1.2, 7), wood);
   cannon.add(base);
@@ -294,7 +360,10 @@ export function buildCannon(): THREE.Group {
 
 export function buildOxygenCylinder(): THREE.Group {
   const tank = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 7, 12), mat(0x2a6a4a));
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.7, 1.7, 7, 12),
+    textured('metal', 0x2a6a4a, { roughness: 0.4, metalness: 0.55, repeatX: 2, repeatY: 1 })
+  );
   body.position.y = 3.5;
   tank.add(body);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.1, 1.1, 8), mat(0xb8c4d4));
@@ -310,7 +379,7 @@ export function buildOxygenCylinder(): THREE.Group {
 
 export function buildGlassCase(): THREE.Group {
   const display = new THREE.Group();
-  const frameMat = mat(0x8a94a4);
+  const frameMat = textured('metal', 0x8a94a4, { roughness: 0.4, metalness: 0.6 });
   const glassMat = new THREE.MeshLambertMaterial({
     color: 0xbfe8ef,
     transparent: true,
@@ -339,10 +408,16 @@ export function buildGlassCase(): THREE.Group {
 
 export function buildVent(): THREE.Group {
   const vent = new THREE.Group();
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(7, 5, 0.6), mat(0x3a3e48));
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(7, 5, 0.6),
+    textured('metal', 0x3a3e48, { roughness: 0.55, metalness: 0.45 })
+  );
   vent.add(frame);
   for (let i = -2; i <= 2; i++) {
-    const slat = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.35, 0.3), mat(0x1a1c24));
+    const slat = new THREE.Mesh(
+      new THREE.BoxGeometry(6.2, 0.35, 0.3),
+      textured('metal', 0x1a1c24, { roughness: 0.5, metalness: 0.5 })
+    );
     slat.position.set(0, i * 0.9, 0.4);
     vent.add(slat);
   }
@@ -369,7 +444,11 @@ export function buildSolidBlocks(solids: Building[]): THREE.Group {
   for (const block of solids) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(block.w, block.h, block.d),
-      mat(palette[block.colorIdx % palette.length])
+      textured('concrete', palette[block.colorIdx % palette.length], {
+        repeatX: 2,
+        repeatY: 2,
+        roughness: 0.92
+      })
     );
     mesh.position.set(block.x, block.h / 2, block.z);
     mesh.rotation.y = block.rot;

@@ -3,6 +3,7 @@ import type { ChapterDef } from '../content3/types';
 import { buildArena } from './models';
 import { buildArenaLayout } from '../sim3d/arena';
 import {
+  buildACUnit,
   buildBalcony,
   buildCableLine,
   buildCannon,
@@ -12,6 +13,8 @@ import {
   buildLocket,
   buildMatchbox,
   buildOxygenCylinder,
+  buildPuddle,
+  buildSign,
   buildVent,
   buildMug,
   buildNeedle,
@@ -23,6 +26,8 @@ import {
   buildWindowFrame
 } from './props';
 import { buildDiviner, buildGarva, buildGarvaCar, buildGlassWing, mat } from './models';
+import { textured } from './materials';
+import { glowSprite } from './glow';
 
 function buildLaneWorld(chapter: ChapterDef): THREE.Group {
   const world = new THREE.Group();
@@ -43,13 +48,74 @@ function buildLaneWorld(chapter: ChapterDef): THREE.Group {
   world.add(locket);
 
   for (const x of [-4.6, 4.6]) {
-    const window = buildWindowFrame(5, 7);
+    const window = buildWindowFrame(4, 6);
     window.position.set(x, 14, -29.75);
     world.add(window);
   }
-  const door = buildWindowFrame(6, 8);
+  const door = buildWindowFrame(5, 7);
   door.position.set(0, 9.4, -29.75);
   world.add(door);
+
+  for (const [x, y] of [
+    [-6.4, 8.4],
+    [6.4, 16.2],
+    [-6.4, 16.2]
+  ]) {
+    const ac = buildACUnit();
+    ac.position.set(x, y, -29.4);
+    world.add(ac);
+  }
+
+  const awning = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.25, 2.8),
+    textured('fabric', 0x6a2a2a, { repeatX: 3, repeatY: 1, roughness: 0.9 })
+  );
+  awning.position.set(0, 13.1, -27.7);
+  awning.rotation.x = 0.16;
+  world.add(awning);
+
+  const tank = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.4, 2.4, 3.2, 12),
+    textured('metal', 0x3a3e48, { roughness: 0.55, metalness: 0.45 })
+  );
+  tank.position.set(4, 20, -34);
+  world.add(tank);
+  for (const dx of [-1.6, 1.6]) {
+    for (const dz of [-1.6, 1.6]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2, 0.2), mat(0x2a2e38));
+      leg.position.set(4 + dx, 18, -34 + dz);
+      world.add(leg);
+    }
+  }
+
+  const sign = buildSign('PUNNAMI LANE', 9, 2.2);
+  sign.position.set(-10, 12, 4);
+  sign.rotation.y = 0.08;
+  world.add(sign);
+
+  for (const [x, z, r] of [
+    [3, 8, 3.2],
+    [-4, -7, 2.4],
+    [7, -18, 2.8]
+  ]) {
+    const puddle = buildPuddle(r);
+    puddle.position.x = x;
+    puddle.position.z = z;
+    world.add(puddle);
+  }
+
+  for (const [x, z] of [
+    [9, 22],
+    [-11, -12],
+    [8, -2]
+  ]) {
+    const bin = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.9, 0.8, 2.4, 10),
+      textured('metal', 0x3a4a3e, { roughness: 0.7, metalness: 0.3 })
+    );
+    bin.position.set(x, 1.2, z);
+    world.add(bin);
+  }
 
   const dish = buildSatelliteDish();
   dish.position.set(-20, 0, 10);
@@ -93,19 +159,22 @@ function buildWorkshopWorld(chapter: ChapterDef): THREE.Group {
 
   const desk = new THREE.Mesh(
     new THREE.BoxGeometry(70, 2, 60),
-    new THREE.MeshLambertMaterial({ color: 0x4a2f1d, })
+    textured('wood', 0x6a4a2a, { repeatX: 8, repeatY: 8, roughness: 0.9 })
   );
   desk.position.set(0, -1, 0);
   world.add(desk);
 
   const wall = new THREE.Mesh(
     new THREE.BoxGeometry(90, 46, 2),
-    new THREE.MeshLambertMaterial({ color: 0x2a1c14, })
+    textured('concrete', 0x2a1c14, { repeatX: 6, repeatY: 4, roughness: 0.98 })
   );
   wall.position.set(0, 22, -32);
   world.add(wall);
 
-  const shelf = new THREE.Mesh(new THREE.BoxGeometry(40, 1.2, 5), mat(0x3a2418));
+  const shelf = new THREE.Mesh(
+    new THREE.BoxGeometry(40, 1.2, 5),
+    textured('wood', 0x3a2418, { repeatX: 5, repeatY: 1, roughness: 0.9 })
+  );
   shelf.position.set(-16, 16, -30);
   world.add(shelf);
 
@@ -151,11 +220,82 @@ function buildWorkshopWorld(chapter: ChapterDef): THREE.Group {
 
   const paper = new THREE.Mesh(
     new THREE.BoxGeometry(22, 0.12, 16),
-    new THREE.MeshLambertMaterial({ color: 0xd8c8a8, })
+    textured('paper', 0xd8c8a8, { repeatX: 2, repeatY: 2, roughness: 0.95 })
   );
   paper.position.set(2, 0.1, 3);
   paper.rotation.y = -0.12;
   world.add(paper);
+
+  const jarMat = new THREE.MeshStandardMaterial({
+    color: 0xbfe8ef,
+    transparent: true,
+    opacity: 0.26,
+    roughness: 0.1,
+    metalness: 0.2
+  });
+  for (const [x, z, s] of [
+    [-16, -18, 1.2],
+    [-13.2, -16.4, 0.9],
+    [15, -19, 1.4]
+  ]) {
+    const jar = new THREE.Mesh(new THREE.CylinderGeometry(1.5 * s, 1.4 * s, 3.2 * s, 12), jarMat);
+    jar.position.set(x, 1.6 * s, z);
+    world.add(jar);
+    const lid = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.55 * s, 1.55 * s, 0.35, 12),
+      textured('metal', 0x8a94a4, { roughness: 0.5, metalness: 0.5 })
+    );
+    lid.position.set(x, 3.3 * s, z);
+    world.add(lid);
+  }
+
+  const spoolColors = [0xb03a3a, 0x3a6ab0, 0xd8a020, 0x3a8a5a];
+  spoolColors.forEach((color, index) => {
+    const spool = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.9, 0.9, 1.8, 10),
+      textured('fabric', color, { repeatX: 2, repeatY: 1, roughness: 0.9 })
+    );
+    spool.position.set(12 + index * 2.1, 0.9, 6 - index * 1.1);
+    world.add(spool);
+  });
+
+  const magnifier = new THREE.Group();
+  const lens = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.4, 2.4, 0.18, 20),
+    new THREE.MeshStandardMaterial({
+      color: 0xbfe8ef,
+      transparent: true,
+      opacity: 0.3,
+      roughness: 0.05,
+      metalness: 0.1
+    })
+  );
+  lens.position.y = 1.2;
+  magnifier.add(lens);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.16, 6, 20), mat(0xb8c4d4));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 1.2;
+  magnifier.add(rim);
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 3.6, 8), mat(0x3a2418));
+  handle.position.set(2.6, 0.4, 0);
+  handle.rotation.z = Math.PI / 2.4;
+  magnifier.add(handle);
+  magnifier.position.set(10, 0.2, -7);
+  world.add(magnifier);
+
+  for (let i = 0; i < 4; i++) {
+    const stack = new THREE.Mesh(
+      new THREE.BoxGeometry(5.5, 0.35, 4),
+      textured('paper', 0xd8c8a8, { repeatX: 1, repeatY: 1, roughness: 0.95 })
+    );
+    stack.position.set(-18 + (i % 2) * 1.2, 0.2 + i * 0.3, 12 - (i % 2) * 1.4);
+    stack.rotation.y = (i - 1.5) * 0.08;
+    world.add(stack);
+  }
+
+  const steam = glowSprite(0xffd8a0, 4.5, 0.12);
+  steam.position.set(9, 8.5, 2);
+  world.add(steam);
 
   world.add(buildDustField(320, 28));
 
@@ -170,7 +310,7 @@ function buildAirportRoadWorld(): THREE.Group {
   const world = new THREE.Group();
   world.add(buildRoad(24, 230));
 
-  const barrierMat = mat(0x3a3e48);
+  const barrierMat = textured('metal', 0x3a3e48, { roughness: 0.55, metalness: 0.45 });
   for (let i = -6; i <= 6; i++) {
     for (const side of [-1, 1]) {
       const barrier = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 18), barrierMat);
@@ -187,7 +327,7 @@ function buildAirportRoadWorld(): THREE.Group {
     }
   }
 
-  const gantryMat = mat(0x2a2e38);
+  const gantryMat = textured('metal', 0x2a2e38, { roughness: 0.5, metalness: 0.5 });
   for (const side of [-1, 1]) {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 17, 7), gantryMat);
     pole.position.set(side * 13, 8.5, 28);
@@ -196,14 +336,28 @@ function buildAirportRoadWorld(): THREE.Group {
   const beam = new THREE.Mesh(new THREE.BoxGeometry(27, 0.8, 0.8), gantryMat);
   beam.position.set(0, 17, 28);
   world.add(beam);
-  const sign = new THREE.Mesh(
-    new THREE.BoxGeometry(12, 3, 0.3),
-    mat(0x1a3a5a, { emissive: 0x0a1a2a, ei: 0.5 })
-  );
-  sign.position.set(0, 14.5, 28);
-  world.add(sign);
+  const gantrySign = buildSign('AIRPORT', 12, 2.6);
+  gantrySign.position.set(0, 14.5, 28.3);
+  world.add(gantrySign);
 
-  const skylineMat = mat(0x141a28);
+  for (let z = -90; z <= 90; z += 30) {
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.16, 1.4, 5),
+        textured('metal', 0x8a94a4, { roughness: 0.5, metalness: 0.5 })
+      );
+      post.position.set(side * 11.6, 0.7, z);
+      world.add(post);
+      const reflector = new THREE.Mesh(
+        new THREE.SphereGeometry(0.24, 6, 5),
+        mat(0xffd75e, { emissive: 0xffb060, ei: 2.4 })
+      );
+      reflector.position.set(side * 11.6, 1.5, z);
+      world.add(reflector);
+    }
+  }
+
+  const skylineMat = textured('concrete', 0x141a28, { repeatX: 2, repeatY: 4, roughness: 1 });
   for (let i = 0; i < 16; i++) {
     const h = 8 + ((i * 7) % 22);
     const block = new THREE.Mesh(new THREE.BoxGeometry(6, h, 4), skylineMat);
@@ -251,7 +405,12 @@ function buildChandelier(): THREE.Group {
 
 function buildGarvaHouseWorld(storyProps = true): THREE.Group {
   const world = new THREE.Group();
-  const marble = new THREE.MeshLambertMaterial({ color: 0x363c4c });
+  const marble = textured('marble', 0x4a5266, {
+    repeatX: 6,
+    repeatY: 6,
+    roughness: 0.35,
+    metalness: 0.15
+  });
 
   const floor = new THREE.Mesh(new THREE.BoxGeometry(100, 2, 90), marble);
   floor.position.set(0, -1, 0);
@@ -266,7 +425,7 @@ function buildGarvaHouseWorld(storyProps = true): THREE.Group {
     world.add(wall);
   }
 
-  const columnMat = mat(0x3a4050);
+  const columnMat = textured('marble', 0x5a6274, { repeatX: 2, repeatY: 6, roughness: 0.4 });
   for (const x of [-24, 24]) {
     for (const z of [-28, 0, 28]) {
       const column = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 44, 12), columnMat);
@@ -281,6 +440,65 @@ function buildGarvaHouseWorld(storyProps = true): THREE.Group {
   const chandelier = buildChandelier();
   chandelier.position.set(0, 26, 0);
   world.add(chandelier);
+  const chandelierGlow = glowSprite(0xffd75e, 13, 0.3);
+  chandelierGlow.position.set(0, 26, 0);
+  world.add(chandelierGlow);
+
+  const rug = new THREE.Mesh(
+    new THREE.PlaneGeometry(32, 22),
+    textured('fabric', 0x4a1a2a, { repeatX: 4, repeatY: 3, roughness: 0.95 })
+  );
+  rug.rotation.x = -Math.PI / 2;
+  rug.position.set(0, 0.04, 4);
+  world.add(rug);
+
+  const paintingColors = [0x6a3a2a, 0x2a4a6a, 0x5a5a2a];
+  paintingColors.forEach((color, index) => {
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(9, 6, 0.4),
+      textured('wood', 0x3a2418, { roughness: 0.85 })
+    );
+    frame.position.set(-22 + index * 22, 24, -43.7);
+    world.add(frame);
+    const canvas = new THREE.Mesh(
+      new THREE.PlaneGeometry(7.8, 4.8),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.9 })
+    );
+    canvas.position.set(-22 + index * 22, 24, -43.45);
+    world.add(canvas);
+  });
+
+  for (const side of [-1, 1]) {
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.4, 1.8, 3.4, 10),
+      textured('paper', 0x8a4a2a, { roughness: 0.9 })
+    );
+    pot.position.set(side * 34, 1.7, 12);
+    world.add(pot);
+    for (let leaf = 0; leaf < 5; leaf++) {
+      const foliage = new THREE.Mesh(
+        new THREE.SphereGeometry(1.8 - leaf * 0.12, 8, 6),
+        new THREE.MeshStandardMaterial({ color: 0x2a6a3a, roughness: 0.9 })
+      );
+      foliage.position.set(side * 34 + Math.cos(leaf * 2.2) * 1.3, 4.2 + leaf * 1.3, 12 + Math.sin(leaf * 2.2) * 1.3);
+      world.add(foliage);
+    }
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const glass = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.4, 1.2, 8),
+      new THREE.MeshStandardMaterial({
+        color: 0xbfe8ef,
+        transparent: true,
+        opacity: 0.35,
+        roughness: 0.05,
+        metalness: 0.2
+      })
+    );
+    glass.position.set(-4 + i * 2.2, 7.2, 0);
+    world.add(glass);
+  }
 
   const mezzanine = new THREE.Mesh(new THREE.BoxGeometry(72, 1, 12), marble);
   mezzanine.position.set(0, 15, -30);
@@ -310,7 +528,10 @@ function buildGarvaHouseWorld(storyProps = true): THREE.Group {
   }
 
   const safe = new THREE.Group();
-  const safeBody = new THREE.Mesh(new THREE.BoxGeometry(7, 8, 5), mat(0x2a2e38));
+  const safeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(7, 8, 5),
+    textured('metal', 0x2a2e38, { roughness: 0.4, metalness: 0.6 })
+  );
   safeBody.position.y = 4;
   safe.add(safeBody);
   const dial = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.18, 6, 16), mat(0xb8c4d4));
@@ -320,7 +541,10 @@ function buildGarvaHouseWorld(storyProps = true): THREE.Group {
   world.add(safe);
 
   const desk = new THREE.Group();
-  const top = new THREE.Mesh(new THREE.BoxGeometry(12, 0.6, 6), mat(0x3a2418));
+  const top = new THREE.Mesh(
+    new THREE.BoxGeometry(12, 0.6, 6),
+    textured('wood', 0x3a2418, { repeatX: 2, repeatY: 1, roughness: 0.9 })
+  );
   top.position.y = 6.5;
   desk.add(top);
   for (const x of [-5, 5]) {
@@ -394,7 +618,7 @@ function buildGlassHouseWorld(): THREE.Group {
 
 function buildDivinerWorld(): THREE.Group {
   const world = new THREE.Group();
-  const stone = new THREE.MeshLambertMaterial({ color: 0x2a1a12 });
+  const stone = textured('concrete', 0x4a2a1a, { repeatX: 4, repeatY: 4, roughness: 1 });
 
   const floor = new THREE.Mesh(new THREE.BoxGeometry(60, 2, 70), stone);
   floor.position.set(0, -1, 0);
@@ -409,7 +633,7 @@ function buildDivinerWorld(): THREE.Group {
     world.add(wall);
   }
 
-  const clothMat = new THREE.MeshLambertMaterial({ color: 0x6a1a12 });
+  const clothMat = textured('fabric', 0x6a1a12, { repeatX: 2, repeatY: 4, roughness: 0.95 });
   for (const x of [-18, -6, 6, 18]) {
     const cloth = new THREE.Mesh(new THREE.PlaneGeometry(9, 22), clothMat);
     cloth.position.set(x, 18, -33.8);
@@ -510,14 +734,14 @@ export function buildHubWorld(): THREE.Group {
 
   const desk = new THREE.Mesh(
     new THREE.BoxGeometry(70, 2, 50),
-    new THREE.MeshLambertMaterial({ color: 0x3a2418, })
+    textured('wood', 0x3a2418, { repeatX: 8, repeatY: 6, roughness: 0.9 })
   );
   desk.position.set(0, -1, 0);
   world.add(desk);
 
   const back = new THREE.Mesh(
     new THREE.BoxGeometry(90, 50, 2),
-    new THREE.MeshLambertMaterial({ color: 0x0a0c16, })
+    textured('concrete', 0x0a0c16, { repeatX: 6, repeatY: 4, roughness: 1 })
   );
   back.position.set(0, 24, -26);
   world.add(back);

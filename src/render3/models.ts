@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { Building } from '../sim3d/arena';
 import type { ShardMotif } from '../content3/types';
+import { textured } from './materials';
+import { glowSprite } from './glow';
 
 /** Procedural low-poly models. Zero downloads, all original. */
 
@@ -13,57 +15,109 @@ export function mat(color: number, opts: { emissive?: number; ei?: number } = {}
   });
 }
 
-/** Gali the fly: amber body, big blue eyes, beating wings, legs, stinger. */
+/** Gali the fly: segmented body, iridescent double wings, big eyes. */
 export function buildGali(): THREE.Group {
   const gali = new THREE.Group();
+  const amber = new THREE.MeshStandardMaterial({
+    color: 0xe8b04b,
+    roughness: 0.5,
+    metalness: 0.2,
+    flatShading: false
+  });
+  const dark = mat(0x4a2f1d);
 
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), mat(0xe8b04b));
-  body.scale.set(1, 0.85, 1.35);
-  gali.add(body);
+  const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.58, 14, 10), amber);
+  abdomen.scale.set(0.95, 0.8, 1.15);
+  abdomen.position.z = -0.38;
+  gali.add(abdomen);
 
-  const stripes = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.07, 6, 14), mat(0x4a2f1d));
+  const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.46, 14, 10), amber);
+  thorax.scale.set(0.92, 0.86, 1.05);
+  thorax.position.z = 0.28;
+  gali.add(thorax);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), amber);
+  head.scale.set(1, 0.94, 0.85);
+  head.position.z = 0.86;
+  gali.add(head);
+
+  const stripes = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.075, 7, 16), dark);
   stripes.rotation.x = Math.PI / 2;
-  stripes.position.z = -0.1;
-  stripes.scale.set(1, 1, 0.8);
+  stripes.position.z = -0.22;
+  stripes.scale.set(1, 1, 0.82);
   gali.add(stripes);
 
-  const eyeGeo = new THREE.SphereGeometry(0.22, 10, 8);
-  const eyeMat = mat(0x3fa7d6, { emissive: 0x1d5f7e, ei: 0.6 });
-  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.28, 0.18, 0.55);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeR.position.set(0.28, 0.18, 0.55);
-  gali.add(eyeL, eyeR);
-
-  const wingGeo = new THREE.PlaneGeometry(0.9, 0.55);
-  const wingMat = new THREE.MeshLambertMaterial({
-    color: 0xcfe8ef,
-    transparent: true,
-    opacity: 0.55,
-    side: THREE.DoubleSide
+  const eyeGeo = new THREE.SphereGeometry(0.25, 14, 10);
+  const eyeMat = new THREE.MeshStandardMaterial({
+    color: 0x3fa7d6,
+    emissive: 0x1d5f7e,
+    emissiveIntensity: 0.7,
+    roughness: 0.18,
+    metalness: 0.25
   });
-  const wingL = new THREE.Mesh(wingGeo, wingMat);
-  wingL.position.set(-0.55, 0.42, -0.05);
-  wingL.rotation.set(-0.5, 0.3, 0.5);
-  wingL.name = 'wingL';
-  const wingR = new THREE.Mesh(wingGeo, wingMat);
-  wingR.position.set(0.55, 0.42, -0.05);
-  wingR.rotation.set(-0.5, -0.3, -0.5);
-  wingR.name = 'wingR';
-  gali.add(wingL, wingR);
+  const highlight = new THREE.MeshBasicMaterial({ color: 0xe8fbff });
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(eyeGeo, eyeMat);
+    eye.scale.set(0.9, 1, 0.62);
+    eye.position.set(side * 0.22, 0.16, 1.05);
+    gali.add(eye);
+    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.065, 7, 5), highlight);
+    glint.position.set(side * 0.2, 0.23, 1.2);
+    gali.add(glint);
+
+    const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.55, 5), dark);
+    antenna.position.set(side * 0.16, 0.36, 1.18);
+    antenna.rotation.set(0.8, 0, side * 0.25);
+    gali.add(antenna);
+  }
+
+  const wingGeo = new THREE.PlaneGeometry(1.05, 0.62);
+  const wingMats = [
+    new THREE.MeshStandardMaterial({
+      color: 0xd8f4ff,
+      emissive: 0x2a6a7a,
+      emissiveIntensity: 0.35,
+      transparent: true,
+      opacity: 0.62,
+      side: THREE.DoubleSide,
+      roughness: 0.15,
+      metalness: 0.3,
+      depthWrite: false
+    }),
+    new THREE.MeshStandardMaterial({
+      color: 0xffe9b0,
+      emissive: 0x7a5a1a,
+      emissiveIntensity: 0.28,
+      transparent: true,
+      opacity: 0.46,
+      side: THREE.DoubleSide,
+      roughness: 0.2,
+      depthWrite: false
+    })
+  ];
+  for (const side of [-1, 1]) {
+    for (let layer = 0; layer < 2; layer++) {
+      const wing = new THREE.Mesh(wingGeo, wingMats[layer]);
+      wing.position.set(side * (0.52 + layer * 0.08), 0.44 + layer * 0.03, -0.02);
+      wing.rotation.set(-0.5, side * -0.28, side * (0.5 + layer * 0.1));
+      wing.name = `${side < 0 ? 'wingL' : 'wingR'}${layer === 1 ? 'Blur' : ''}`;
+      gali.add(wing);
+    }
+  }
 
   const legMat = mat(0x1a1420);
   for (const side of [-1, 1]) {
     for (let i = 0; i < 3; i++) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 5), legMat);
-      leg.position.set(side * 0.5, -0.35, 0.3 - i * 0.3);
-      leg.rotation.z = side * 0.9;
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.024, 0.6, 5), legMat);
+      leg.position.set(side * 0.42, -0.34, 0.42 - i * 0.32);
+      leg.rotation.z = side * 0.95;
+      leg.rotation.x = 0.2 - i * 0.2;
       gali.add(leg);
     }
   }
 
-  const sting = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.35, 6), mat(0x4a2f1d));
-  sting.position.set(0, -0.05, -0.85);
+  const sting = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.4, 7), dark);
+  sting.position.set(0, -0.06, -0.98);
   sting.rotation.x = -Math.PI / 2;
   gali.add(sting);
 
@@ -114,7 +168,7 @@ export function buildArena(layout: Building[]): THREE.Group {
 
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(130, 40),
-    new THREE.MeshLambertMaterial({ color: 0x2a3450, })
+    textured('concrete', 0x364056, { repeatX: 10, repeatY: 10, roughness: 0.95 })
   );
   ground.rotation.x = -Math.PI / 2;
   arena.add(ground);
@@ -131,7 +185,11 @@ export function buildArena(layout: Building[]): THREE.Group {
   for (const block of layout) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(block.w, block.h, block.d),
-      mat(palette[block.colorIdx % palette.length])
+      textured('concrete', palette[block.colorIdx % palette.length], {
+        repeatX: 2,
+        repeatY: 2,
+        roughness: 0.9
+      })
     );
     mesh.position.set(block.x, block.h / 2, block.z);
     mesh.rotation.y = block.rot;
@@ -147,7 +205,7 @@ export function buildArena(layout: Building[]): THREE.Group {
  */
 export function buildShilpi(): THREE.Group {
   const maker = new THREE.Group();
-  const sari = mat(0x2e6f6a);
+  const sari = textured('fabric', 0x2e6f6a, { repeatX: 2, repeatY: 2, roughness: 0.9 });
   const skin = mat(0xb77a52);
   const hair = mat(0x1c1418);
 
@@ -223,11 +281,17 @@ export function buildShilpi(): THREE.Group {
 /** Garva's car: long, dark, glass roof. Silhouette first. */
 export function buildGarvaCar(): THREE.Group {
   const car = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(13, 3.2, 6.4), mat(0x14161c));
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(13, 3.2, 6.4),
+    textured('metal', 0x14161c, { repeatX: 3, repeatY: 1, roughness: 0.34, metalness: 0.7 })
+  );
   body.position.y = 2.2;
   car.add(body);
 
-  const nose = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 6), mat(0x1c1f28));
+  const nose = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 2.2, 6),
+    textured('metal', 0x1c1f28, { roughness: 0.4, metalness: 0.6 })
+  );
   nose.position.set(6.5, 1.9, 0);
   car.add(nose);
 
@@ -262,7 +326,9 @@ export function buildGarvaCar(): THREE.Group {
       mat(0xfff2c8, { emissive: 0xffe9a8, ei: 3 })
     );
     light.position.set(8.3, 2.4, side * 2.1);
-    car.add(light);
+    const halo = glowSprite(0xffe9a8, 2.8, 0.4);
+    halo.position.copy(light.position);
+    car.add(light, halo);
 
     const tail = new THREE.Mesh(
       new THREE.SphereGeometry(0.48, 8, 6),
@@ -302,7 +368,7 @@ export function buildShard(motif: ShardMotif): THREE.Group {
     new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55 })
   );
   halo.rotation.x = Math.PI / 2.4;
-  shard.add(halo);
+  shard.add(halo, glowSprite(color, 3.2, 0.45));
   shard.name = `shard-${motif}`;
   return shard;
 }
@@ -352,7 +418,7 @@ export function buildTweezerProp(): THREE.Group {
 export function buildDiviner(): THREE.Group {
   const diviner = new THREE.Group();
   const robeColor = 0x4a1a1a;
-  const robe = mat(robeColor);
+  const robe = textured('fabric', robeColor, { repeatX: 2, repeatY: 2, roughness: 0.95 });
   const skin = mat(0x8a5a3a);
 
   const skirt = new THREE.Mesh(new THREE.ConeGeometry(6.4, 17, 10), robe);
@@ -422,8 +488,8 @@ export function buildDiviner(): THREE.Group {
 /** Garva: a tall suited industrialist. Original design, no likeness. */
 export function buildGarva(): THREE.Group {
   const garva = new THREE.Group();
-  const suit = mat(0x242833);
-  const shirt = mat(0xd8d0c0);
+  const suit = textured('fabric', 0x242833, { repeatX: 2, repeatY: 2, roughness: 0.82 });
+  const shirt = textured('paper', 0xd8d0c0, { roughness: 0.8 });
   const skin = mat(0xa86a4a);
   const hair = mat(0x1a1418);
 

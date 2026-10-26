@@ -6,6 +6,7 @@ import { localized, setLang, t, toggleLang } from './core/i18n';
 import { createHud } from './ui/hud';
 import { StoryRuntime } from './story/runtime';
 import { collectedShardIds, currentObjective, totalShards, type StoryEvent } from './sim3d/story';
+import { consumeBumps } from './sim3d/flight';
 
 function randomSeed(): number {
   const buffer = new Uint32Array(1);
@@ -35,10 +36,12 @@ hud.onMute(() => {
 let stage: Stage;
 try {
   stage = new Stage(canvas);
+  stage.setQuality(save.quality);
 } catch {
   hud.showFatal(t('webglTitle'), t('webglBody'), t('retry'), () => window.location.reload());
   throw new Error('Egara 3D requires WebGL');
 }
+let quality: 'high' | 'low' = save.quality;
 
 input.attachTouch({
   canvas,
@@ -66,6 +69,7 @@ let last = performance.now();
 let frames = 0;
 let fpsTime = 0;
 let qualityScale = 1;
+let slowTime = 0;
 
 function showTitle(): void {
   runtime.returnToTitle();
@@ -152,8 +156,20 @@ function showPause(): void {
       shakeOn = !shakeOn;
       stage.setReducedMotion(!shakeOn);
       showPause();
-    }
+    },
+    quality,
+    onToggleQuality: toggleQuality
   });
+}
+
+function toggleQuality(): void {
+  quality = quality === 'high' ? 'low' : 'high';
+  save = { ...save, quality };
+  persistSave(save);
+  stage.setQuality(quality);
+  qualityScale = 1;
+  stage.setRenderScale(1);
+  showPause();
 }
 
 function resumeChapter(): void {
@@ -381,6 +397,12 @@ function frame(now: number): void {
   if (runtime.screen === 'playing' && runtime.story && !cardOpen) {
     const events = runtime.step(input.poll(), dt);
     handleEvents(events);
+    const bumps = consumeBumps(runtime.story.world);
+    for (const bump of bumps) {
+      stage.burst(bump.x, bump.y, bump.z, bump.strength > 4);
+      stage.hurtShake();
+      audio.play('hit');
+    }
     audio.setTension(runtime.story.paranoia / 100);
     const hasOutro = runtime.chapter?.cards.some((card) => card.at === 'outro');
     if (runtime.result && !hasOutro) showDebrief();
@@ -397,8 +419,23 @@ function frame(now: number): void {
     canvas.dataset.fps = String(Math.round(fps));
     canvas.dataset.drawCalls = String(stage.fpsDrawCalls);
     if (runtime.screen === 'playing' && !cardOpen) {
-      if (fps < 48 && qualityScale > 0.65) {
-        qualityScale = Math.max(0.65, qualityScale - 0.1);
+      if (quality === 'high' && fps < 50) {
+        slowTime += 0.5;
+        if (slowTime >= 1) {
+          quality = 'low';
+          save = { ...save, quality };
+          persistSave(save);
+          stage.setQuality('low');
+          qualityScale = 1;
+          stage.setRenderScale(1);
+          hud.toast(t('graphicsLow'));
+        }
+      } else {
+        slowTime = 0;
+      }
+      const floor = quality === 'low' ? 0.55 : 0.65;
+      if (fps < 48 && qualityScale > floor) {
+        qualityScale = Math.max(floor, qualityScale - 0.1);
         stage.setRenderScale(qualityScale);
       } else if (fps > 57 && qualityScale < 1) {
         qualityScale = Math.min(1, qualityScale + 0.05);
@@ -406,6 +443,7 @@ function frame(now: number): void {
       }
     }
     canvas.dataset.renderScale = stage.renderScaleValue.toFixed(2);
+    canvas.dataset.quality = quality;
     frames = 0;
     fpsTime = 0;
   }

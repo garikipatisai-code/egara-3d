@@ -32,7 +32,7 @@ describe('arena collision', () => {
     world.player.pos.z = 0;
     stepWorld(world, { turn: 0, climb: 0, boost: false, sting: false });
     const dist = Math.hypot(world.player.pos.x - 20, world.player.pos.z);
-    expect(dist).toBeGreaterThanOrEqual(6 + 1 - 1e-9);
+    expect(dist).toBeGreaterThanOrEqual(solids[0].w / 2 + tuning.player.radius - 1e-9);
   });
 
   it('lets flight above the roof pass over', () => {

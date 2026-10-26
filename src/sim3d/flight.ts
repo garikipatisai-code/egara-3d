@@ -1,4 +1,5 @@
 import type { Building } from './arena';
+import { resolveCircleBox } from './collision';
 
 export const STEP = 1 / 60;
 export const MAX_STEPS = 5;
@@ -34,6 +35,11 @@ export interface Tuning {
     radius: number;
     lives: number;
     invulnFrames: number;
+    accel?: number;
+    drag?: number;
+    turnSmoothing?: number;
+    rollLimit?: number;
+    collisionLoss?: number;
   };
   sting: { range: number; cooldownFrames: number; damage: number };
   foe: { hp: number; radius: number; speed: number; score: number };
@@ -43,11 +49,24 @@ export interface Tuning {
 
 export interface Player {
   pos: Vec3;
+  vel: Vec3;
+  speed: number;
+  roll: number;
+  smoothedTurn: number;
+  smoothedClimb: number;
   yaw: number;
   pitch: number;
   alive: boolean;
   invulnFrames: number;
   cooldownFrames: number;
+  bumpCooldown: number;
+}
+
+export interface Bump {
+  x: number;
+  y: number;
+  z: number;
+  strength: number;
 }
 
 export interface Foe {
@@ -72,6 +91,7 @@ export interface World {
   player: Player;
   foes: Foe[];
   solids: Building[];
+  bumps: Bump[];
   outcome: Outcome;
 }
 
@@ -100,14 +120,21 @@ export function createWorld(seed: number, tuning: Tuning, solids: Building[] = [
     outcome: 'running',
     player: {
       pos: { x: 0, y: 8, z: 0 },
+      vel: { x: 0, y: 0, z: tuning.player.speed },
+      speed: tuning.player.speed,
+      roll: 0,
+      smoothedTurn: 0,
+      smoothedClimb: 0,
       yaw: 0,
       pitch: 0,
       alive: true,
       invulnFrames: 0,
-      cooldownFrames: 0
+      cooldownFrames: 0,
+      bumpCooldown: 0
     },
     foes: Array.from({ length: tuning.pools.foes }, emptyFoe),
-    solids
+    solids,
+    bumps: []
   };
 }
 
@@ -152,41 +179,113 @@ function dist3(a: Vec3, b: Vec3): number {
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+function pushBump(world: World, x: number, y: number, z: number, strength: number): void {
+  world.bumps.push({ x, y, z, strength });
+  if (world.bumps.length > 8) world.bumps.shift();
+}
+
+export function consumeBumps(world: World): Bump[] {
+  if (world.bumps.length === 0) return [];
+  return world.bumps.splice(0, world.bumps.length);
+}
+
 function stepPlayer(world: World, input: FlyInput): void {
   const { player, tuning } = world;
+  const p = tuning.player;
+  const accel = p.accel ?? 26;
+  const drag = p.drag ?? 7;
+  const turnSmoothing = p.turnSmoothing ?? 10;
+  const rollLimit = p.rollLimit ?? 0.55;
+  const collisionLoss = p.collisionLoss ?? 0.72;
 
-  player.yaw -= clamp(input.turn, -1, 1) * tuning.player.yawRate * STEP;
+  if (world.tick <= 1) {
+    player.speed = p.speed;
+    const reset = forward(player.yaw, player.pitch);
+    player.vel.x = reset.x * player.speed;
+    player.vel.y = reset.y * player.speed;
+    player.vel.z = reset.z * player.speed;
+  }
+
+  const turnTarget = clamp(input.turn, -1, 1);
+  const climbTarget = clamp(input.climb, -1, 1);
+  const smooth = 1 - Math.exp(-turnSmoothing * STEP);
+  player.smoothedTurn += (turnTarget - player.smoothedTurn) * smooth;
+  player.smoothedClimb += (climbTarget - player.smoothedClimb) * smooth;
+
+  const maxSpeed = p.speed + p.boost;
+  const speedFactor = 0.55 + 0.45 * clamp(player.speed / Math.max(1, maxSpeed), 0, 1);
+  player.yaw -= player.smoothedTurn * p.yawRate * speedFactor * STEP;
   player.pitch = clamp(
-    player.pitch + clamp(input.climb, -1, 1) * 1.6 * STEP,
-    -tuning.player.pitchLimit,
-    tuning.player.pitchLimit
+    player.pitch + player.smoothedClimb * 1.6 * STEP,
+    -p.pitchLimit,
+    p.pitchLimit
   );
 
-  const speed = tuning.player.speed + (input.boost ? tuning.player.boost : 0);
+  const rollTarget = -player.smoothedTurn * rollLimit;
+  player.roll += (rollTarget - player.roll) * (1 - Math.exp(-8 * STEP));
+
+  const climbCost = Math.max(0, player.smoothedClimb) * 3.1;
+  const diveGain = Math.max(0, -player.smoothedClimb) * 2.2 + Math.max(0, -player.pitch) * 5;
+  const targetSpeed = p.speed + (input.boost ? p.boost : 0) - climbCost + diveGain;
+  const response = targetSpeed > player.speed ? accel : drag;
+  player.speed += (targetSpeed - player.speed) * (1 - Math.exp(-response * STEP));
+  player.speed = clamp(player.speed, p.speed * 0.5, p.speed + p.boost * 1.25);
+
   const dir = forward(player.yaw, player.pitch);
-  player.pos.x += dir.x * speed * STEP;
-  player.pos.y += dir.y * speed * STEP;
-  player.pos.z += dir.z * speed * STEP;
+  const velocityResponse = 1 - Math.exp(-9 * STEP);
+  player.vel.x += (dir.x * player.speed - player.vel.x) * velocityResponse;
+  player.vel.y += (dir.y * player.speed - player.vel.y) * velocityResponse;
+  player.vel.z += (dir.z * player.speed - player.vel.z) * velocityResponse;
 
-  player.pos.y = clamp(player.pos.y, tuning.minAltitude, tuning.maxAltitude);
+  player.pos.x += player.vel.x * STEP;
+  player.pos.y += player.vel.y * STEP;
+  player.pos.z += player.vel.z * STEP;
 
-  const r = Math.hypot(player.pos.x, player.pos.z);
-  if (r > tuning.arenaRadius) {
-    player.pos.x *= tuning.arenaRadius / r;
-    player.pos.z *= tuning.arenaRadius / r;
+  if (player.pos.y < tuning.minAltitude) {
+    player.pos.y = tuning.minAltitude;
+    player.vel.y = Math.max(0, player.vel.y);
+  } else if (player.pos.y > tuning.maxAltitude) {
+    player.pos.y = tuning.maxAltitude;
+    player.vel.y = Math.min(0, player.vel.y);
+  }
+
+  const radius = Math.hypot(player.pos.x, player.pos.z);
+  if (radius > tuning.arenaRadius) {
+    const nx = player.pos.x / radius;
+    const nz = player.pos.z / radius;
+    player.pos.x = nx * tuning.arenaRadius;
+    player.pos.z = nz * tuning.arenaRadius;
+    const outward = player.vel.x * nx + player.vel.z * nz;
+    if (outward > 0) {
+      player.vel.x -= nx * outward;
+      player.vel.z -= nz * outward;
+      player.speed *= 0.9;
+      if (player.bumpCooldown <= 0) {
+        pushBump(world, player.pos.x, player.pos.y, player.pos.z, Math.min(8, outward));
+        player.bumpCooldown = 12;
+      }
+    }
   }
 
   for (const solid of world.solids) {
-    if (player.pos.y > solid.h + tuning.player.radius) continue;
-    const dx = player.pos.x - solid.x;
-    const dz = player.pos.z - solid.z;
-    const reach = solid.r + tuning.player.radius;
-    const dist = Math.hypot(dx, dz);
-    if (dist >= reach || dist === 0) continue;
-    player.pos.x = solid.x + (dx / dist) * reach;
-    player.pos.z = solid.z + (dz / dist) * reach;
+    if (player.pos.y > solid.h + p.radius) continue;
+    const hit = resolveCircleBox(player.pos.x, player.pos.z, p.radius, solid);
+    if (!hit.hit) continue;
+    player.pos.x = hit.x;
+    player.pos.z = hit.z;
+    const inward = player.vel.x * hit.nx + player.vel.z * hit.nz;
+    if (inward < 0) {
+      player.vel.x -= hit.nx * inward;
+      player.vel.z -= hit.nz * inward;
+      player.speed *= collisionLoss;
+      if (player.bumpCooldown <= 0) {
+        pushBump(world, hit.x, player.pos.y, hit.z, Math.min(10, -inward + 2));
+        player.bumpCooldown = 12;
+      }
+    }
   }
 
+  if (player.bumpCooldown > 0) player.bumpCooldown--;
   if (player.invulnFrames > 0) player.invulnFrames--;
   if (player.cooldownFrames > 0) player.cooldownFrames--;
 
@@ -319,8 +418,14 @@ export function hashWorld(world: World): string {
     q(world.player.pos.z),
     q(world.player.yaw),
     q(world.player.pitch),
+    q(world.player.speed),
+    q(world.player.roll),
+    q(world.player.vel.x),
+    q(world.player.vel.y),
+    q(world.player.vel.z),
     world.player.invulnFrames,
     world.player.cooldownFrames,
+    world.player.bumpCooldown,
     world.waveTimer
   ];
 

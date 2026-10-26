@@ -11,6 +11,7 @@ export interface SaveData {
   v: 2;
   muted: boolean;
   lang: Lang;
+  quality: 'high' | 'low';
   best: number;
   chapters: Record<string, ChapterProgress>;
   shards: string[];
@@ -20,7 +21,16 @@ export interface SaveData {
 export const SAVE_KEY = 'egara3d.save';
 
 export function defaultSave(): SaveData {
-  return { v: 2, muted: false, lang: 'en', best: 0, chapters: {}, shards: [], amulet: false };
+  return {
+    v: 2,
+    muted: false,
+    lang: 'en',
+    quality: 'high',
+    best: 0,
+    chapters: {},
+    shards: [],
+    amulet: false
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -70,6 +80,7 @@ export function parseSave(raw: string | null): SaveData {
 
   if (typeof parsed.muted === 'boolean') save.muted = parsed.muted;
   if (parsed.lang === 'en' || parsed.lang === 'te') save.lang = parsed.lang;
+  if (parsed.quality === 'low') save.quality = 'low';
   save.best = Math.floor(readNumber(parsed.best));
   save.chapters = readChapters(parsed.chapters);
   save.shards = readShards(parsed.shards);

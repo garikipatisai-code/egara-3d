@@ -64,6 +64,8 @@ export interface Hud {
     onMute: () => void;
     shakeOn: boolean;
     onToggleShake: () => void;
+    quality: 'high' | 'low';
+    onToggleQuality: () => void;
   }): void;
   showDebrief(opts: {
     chapter: ChapterDef;
@@ -407,7 +409,17 @@ export function createHud(): Hud {
       setBar(true);
     },
 
-    showPause: ({ onResume, onRestart, onChapters, onLang, onMute, shakeOn, onToggleShake }) => {
+    showPause: ({
+      onResume,
+      onRestart,
+      onChapters,
+      onLang,
+      onMute,
+      shakeOn,
+      onToggleShake,
+      quality,
+      onToggleQuality
+    }) => {
       pauseButton.textContent = t('pause');
       hideBossBar();
       setBar(true);
@@ -420,6 +432,12 @@ export function createHud(): Hud {
       button(row, t('restart'), onRestart);
       button(row, t('backToChapters'), onChapters);
       const settings = el('div', 'hud-actions-row', panel);
+      button(
+        settings,
+        `${t('graphics')}: ${quality === 'high' ? t('high') : t('low')}`,
+        onToggleQuality,
+        { className: 'hud-btn-ghost' }
+      );
       button(settings, `${t('shake')}: ${shakeOn ? t('on') : t('off')}`, onToggleShake, {
         className: 'hud-btn-ghost'
       });

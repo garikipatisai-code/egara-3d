@@ -62,7 +62,11 @@ const EN = {
   amuletMissing: 'The wing is not whole. Twelve memories make the amulet.',
   amulet: 'Amulet',
   oneWing: 'One wing',
-  newTale: 'New tale'
+  newTale: 'New tale',
+  graphics: 'Graphics',
+  high: 'High',
+  low: 'Low',
+  graphicsLow: 'Graphics lowered to keep the frame rate'
 } as const;
 
 export type TextKey = keyof typeof EN;
@@ -127,7 +131,11 @@ const TE: Record<TextKey, string> = {
   amuletMissing: 'రెక్క పూర్తిగా లేదు. పన్నెండు జ్ఞాపకాలు తాయెత్తును చేస్తాయి.',
   amulet: 'తాయెత్తు',
   oneWing: 'ఒక రెక్క',
-  newTale: 'కొత్త కథ'
+  newTale: 'కొత్త కథ',
+  graphics: 'గ్రాఫిక్స్',
+  high: 'అధికం',
+  low: 'తక్కువ',
+  graphicsLow: 'ఫ్రేమ్ రేటు కోసం గ్రాఫిక్స్ తగ్గించబడింది'
 };
 
 const DICTS: Record<Lang, Record<TextKey, string>> = { en: EN, te: TE };
