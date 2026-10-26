@@ -13,6 +13,9 @@ test.describe('touch controls', () => {
 
     await expect(page.locator('.hud-touch-sting')).toBeVisible();
     await expect(page.locator('.hud-touch-boost')).toBeVisible();
+    await expect(page.locator('.hud-touch-up')).toBeVisible();
+    await expect(page.locator('.hud-touch-down')).toBeVisible();
+    await expect(page.locator('.hud-touch-perch')).toBeVisible();
 
     const canvas = page.locator('canvas');
     await canvas.dispatchEvent('pointerdown', {

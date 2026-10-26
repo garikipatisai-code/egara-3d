@@ -39,8 +39,8 @@ function run(world: World, frames: number, input: FlyInput = idle): void {
 describe('inertial flight', () => {
   it('accelerates toward boost speed and drags back to cruise', () => {
     const world = createWorld(1, tuning);
-    expect(world.player.speed).toBe(14);
-    run(world, 90, { ...idle, boost: true });
+    expect(world.player.speed).toBe(0);
+    run(world, 90, { ...idle, throttle: 1, boost: true });
     expect(world.player.speed).toBeGreaterThan(21);
     run(world, 150, idle);
     expect(world.player.speed).toBeLessThan(15.5);
@@ -48,7 +48,7 @@ describe('inertial flight', () => {
 
   it('banks into a turn and levels out', () => {
     const world = createWorld(2, tuning);
-    run(world, 40, { ...idle, turn: 1 });
+    run(world, 40, { ...idle, turn: 1, throttle: 1 });
     expect(world.player.roll).toBeLessThan(-0.2);
     run(world, 90, idle);
     expect(Math.abs(world.player.roll)).toBeLessThan(0.08);
@@ -88,7 +88,7 @@ describe('rotated-box collision', () => {
     const world = createWorld(5, tuning, [box]);
     world.player.pos = { x: 0, y: 8, z: 0 };
     world.player.yaw = Math.PI;
-    run(world, 120);
+    run(world, 120, { ...idle, throttle: 1 });
     expect(world.player.pos.z).toBeGreaterThanOrEqual(-5 - tuning.player.radius - 1e-6);
     expect(world.player.pos.z).toBeLessThan(0);
   });
@@ -97,7 +97,7 @@ describe('rotated-box collision', () => {
     const world = createWorld(6, tuning, [box]);
     world.player.pos = { x: 0, y: 8, z: 0 };
     world.player.yaw = Math.PI;
-    run(world, 120);
+    run(world, 120, { ...idle, throttle: 1 });
     const bumps = consumeBumps(world);
     expect(bumps.length).toBeGreaterThan(0);
     expect(consumeBumps(world)).toEqual([]);
@@ -113,7 +113,7 @@ describe('rotated-box collision', () => {
 
   it('clamps to the arena with a bump', () => {
     const world = createWorld(7, { ...tuning, arenaRadius: 12 });
-    run(world, 400, { ...idle, boost: true });
+    run(world, 400, { ...idle, throttle: 1, boost: true });
     expect(Math.hypot(world.player.pos.x, world.player.pos.z)).toBeLessThanOrEqual(12 + 1e-6);
     expect(consumeBumps(world).length).toBeGreaterThan(0);
   });

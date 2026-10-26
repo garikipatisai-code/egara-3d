@@ -8,14 +8,15 @@ scale 0.50–1.0; high quality uses one 1024 shadow map, low quality uses none.
 ## Automated gate (P4)
 
 ```sh
-npx vitest run tests/unit       # 74 tests
+npx vitest run tests/unit       # 81 tests
 npx tsc --noEmit                # clean
-npm run build                   # 688 KB raw / 181 KB gzip total
-npx playwright test tests/smoke # 13 passed, 1 skipped (live)
+npm run build                   # 692 KB raw / 183 KB gzip total
+npx playwright test tests/smoke # 15 passed, 1 skipped (live)
 ```
 
-Bundle split: three.js ~129 KB gzip; game code ~52 KB gzip. Budget for app code
-(excluding three) is 200 KB gzip.
+Bundle split: three.js ~129 KB gzip; game code ~54 KB gzip. Budget for app code
+(excluding three) is 200 KB gzip. Throttle/hover/perch add no measurable frame
+cost; they reuse the fixed-step loop.
 
 ## Headless run — Chromium SwiftShader, 960×540
 

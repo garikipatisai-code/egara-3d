@@ -42,7 +42,7 @@ describe('arena collision', () => {
     world.player.pos.y = 20;
     world.player.pos.z = 0;
     world.player.yaw = Math.PI / 2;
-    stepWorld(world, { turn: 0, climb: 0, boost: false, sting: false });
+    stepWorld(world, { turn: 0, climb: 0, throttle: 1, boost: false, sting: false });
     expect(world.player.pos.x).toBeGreaterThan(14);
   });
 

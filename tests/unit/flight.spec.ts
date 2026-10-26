@@ -57,7 +57,7 @@ describe('3d flight sim', () => {
 
   it('clamps to the arena', () => {
     const world = createWorld(3, tuning);
-    runFrames(world, 3000, { turn: 0, climb: 0, boost: true, sting: false });
+    runFrames(world, 3000, { turn: 0, climb: 0, throttle: 1, boost: true, sting: false });
     const r = Math.hypot(world.player.pos.x, world.player.pos.z);
     expect(r).toBeLessThanOrEqual(tuning.arenaRadius + 1e-6);
   });

@@ -16,8 +16,12 @@ export interface Vec3 {
 export interface FlyInput {
   /** Yaw right (+) / left (-), -1..1. Positive turns to screen-right. */
   turn: number;
-  /** Descend (-) / climb (+), -1..1. */
+  /** Descend (-) / ascend (+), -1..1. */
   climb: number;
+  /** Reverse (-) / forward (+), -1..1. Zero hovers. */
+  throttle?: number;
+  /** Edge press: perch or take off. */
+  perch?: boolean;
   boost: boolean;
   sting: boolean;
 }
@@ -40,6 +44,7 @@ export interface Tuning {
     turnSmoothing?: number;
     rollLimit?: number;
     collisionLoss?: number;
+    liftSpeed?: number;
   };
   sting: { range: number; cooldownFrames: number; damage: number };
   foe: { hp: number; radius: number; speed: number; score: number };
@@ -54,12 +59,15 @@ export interface Player {
   roll: number;
   smoothedTurn: number;
   smoothedClimb: number;
+  smoothedThrottle: number;
   yaw: number;
   pitch: number;
   alive: boolean;
   invulnFrames: number;
   cooldownFrames: number;
   bumpCooldown: number;
+  perched: boolean;
+  perchY: number;
 }
 
 export interface Bump {
@@ -120,17 +128,20 @@ export function createWorld(seed: number, tuning: Tuning, solids: Building[] = [
     outcome: 'running',
     player: {
       pos: { x: 0, y: 8, z: 0 },
-      vel: { x: 0, y: 0, z: tuning.player.speed },
-      speed: tuning.player.speed,
+      vel: { x: 0, y: 0, z: 0 },
+      speed: 0,
       roll: 0,
       smoothedTurn: 0,
       smoothedClimb: 0,
+      smoothedThrottle: 0,
       yaw: 0,
       pitch: 0,
       alive: true,
       invulnFrames: 0,
       cooldownFrames: 0,
-      bumpCooldown: 0
+      bumpCooldown: 0,
+      perched: false,
+      perchY: 0
     },
     foes: Array.from({ length: tuning.pools.foes }, emptyFoe),
     solids,
@@ -189,6 +200,83 @@ export function consumeBumps(world: World): Bump[] {
   return world.bumps.splice(0, world.bumps.length);
 }
 
+function trySting(world: World, input: FlyInput): void {
+  const { player, tuning } = world;
+  if (!input.sting || player.cooldownFrames > 0) return;
+  let best: Foe | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const foe of world.foes) {
+    if (!foe.alive) continue;
+    const d = dist3(foe.pos, player.pos);
+    if (d < bestDistance) {
+      best = foe;
+      bestDistance = d;
+    }
+  }
+  if (best && bestDistance <= tuning.sting.range) {
+    best.hp -= tuning.sting.damage;
+    if (best.hp <= 0) {
+      best.alive = false;
+      world.score += best.score;
+    }
+  }
+  player.cooldownFrames = tuning.sting.cooldownFrames;
+}
+
+/** Nearest upward-facing surface the fly can settle on. */
+function perchSurface(world: World): number | null {
+  const { player, tuning } = world;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  let bestY: number | null = null;
+
+  if (player.pos.y <= tuning.minAltitude + 2.2) {
+    bestDistance = Math.abs(player.pos.y - tuning.minAltitude);
+    bestY = tuning.minAltitude;
+  }
+
+  for (const solid of world.solids) {
+    if (player.pos.y < solid.h - 1) continue;
+    const vertical = Math.abs(player.pos.y - solid.h);
+    if (vertical > 2.5 || vertical >= bestDistance) continue;
+    const c = Math.cos(solid.rot);
+    const s = Math.sin(solid.rot);
+    const dx = player.pos.x - solid.x;
+    const dz = player.pos.z - solid.z;
+    const lx = dx * c - dz * s;
+    const lz = dx * s + dz * c;
+    if (Math.abs(lx) <= solid.w / 2 + tuning.player.radius && Math.abs(lz) <= solid.d / 2 + tuning.player.radius) {
+      bestDistance = vertical;
+      bestY = solid.h;
+    }
+  }
+
+  return bestY;
+}
+
+function tryPerch(world: World): boolean {
+  const { player } = world;
+  const surfaceY = perchSurface(world);
+  if (surfaceY === null) return false;
+  player.perched = true;
+  player.perchY = surfaceY;
+  player.pos.y = surfaceY + 0.35;
+  player.speed = 0;
+  player.vel.x = 0;
+  player.vel.y = 0;
+  player.vel.z = 0;
+  player.pitch = 0;
+  player.roll *= 0.5;
+  return true;
+}
+
+function detach(world: World): void {
+  const { player, tuning } = world;
+  player.perched = false;
+  player.pos.y = player.perchY + tuning.player.radius * 1.6;
+  player.vel.y = 1.2;
+  player.speed = 0;
+}
+
 function stepPlayer(world: World, input: FlyInput): void {
   const { player, tuning } = world;
   const p = tuning.player;
@@ -197,23 +285,56 @@ function stepPlayer(world: World, input: FlyInput): void {
   const turnSmoothing = p.turnSmoothing ?? 10;
   const rollLimit = p.rollLimit ?? 0.55;
   const collisionLoss = p.collisionLoss ?? 0.72;
-
-  if (world.tick <= 1) {
-    player.speed = p.speed;
-    const reset = forward(player.yaw, player.pitch);
-    player.vel.x = reset.x * player.speed;
-    player.vel.y = reset.y * player.speed;
-    player.vel.z = reset.z * player.speed;
-  }
+  const liftSpeed = p.liftSpeed ?? 3.4;
 
   const turnTarget = clamp(input.turn, -1, 1);
   const climbTarget = clamp(input.climb, -1, 1);
+  const throttleTarget = clamp(input.throttle ?? 0, -1, 1);
   const smooth = 1 - Math.exp(-turnSmoothing * STEP);
   player.smoothedTurn += (turnTarget - player.smoothedTurn) * smooth;
   player.smoothedClimb += (climbTarget - player.smoothedClimb) * smooth;
+  player.smoothedThrottle += (throttleTarget - player.smoothedThrottle) * smooth;
+
+  if (world.tick <= 1) {
+    player.speed = 0;
+    player.vel.x = 0;
+    player.vel.y = 0;
+    player.vel.z = 0;
+    player.pitch = 0;
+  }
+
+  if (player.perched) {
+    const moving =
+      Math.abs(player.smoothedThrottle) > 0.15 || Math.abs(player.smoothedClimb) > 0.15;
+    if (input.perch || moving) {
+      detach(world);
+    } else {
+      player.speed = 0;
+      player.vel.x = 0;
+      player.vel.y = 0;
+      player.vel.z = 0;
+      player.yaw -= player.smoothedTurn * p.yawRate * 0.55 * STEP;
+      player.pitch *= 0.85;
+      player.roll *= 0.88;
+      if (player.bumpCooldown > 0) player.bumpCooldown--;
+      if (player.invulnFrames > 0) player.invulnFrames--;
+      if (player.cooldownFrames > 0) player.cooldownFrames--;
+      trySting(world, input);
+      return;
+    }
+  } else if (input.perch) {
+    if (tryPerch(world)) {
+      if (player.bumpCooldown > 0) player.bumpCooldown--;
+      if (player.invulnFrames > 0) player.invulnFrames--;
+      if (player.cooldownFrames > 0) player.cooldownFrames--;
+      trySting(world, input);
+      return;
+    }
+  }
 
   const maxSpeed = p.speed + p.boost;
-  const speedFactor = 0.55 + 0.45 * clamp(player.speed / Math.max(1, maxSpeed), 0, 1);
+  const speedFactor =
+    0.55 + 0.45 * clamp(Math.abs(player.speed) / Math.max(1, maxSpeed), 0, 1);
   player.yaw -= player.smoothedTurn * p.yawRate * speedFactor * STEP;
   player.pitch = clamp(
     player.pitch + player.smoothedClimb * 1.6 * STEP,
@@ -221,20 +342,23 @@ function stepPlayer(world: World, input: FlyInput): void {
     p.pitchLimit
   );
 
-  const rollTarget = -player.smoothedTurn * rollLimit;
+  const rollTarget =
+    -player.smoothedTurn * rollLimit * (0.2 + 0.8 * clamp(Math.abs(player.speed) / p.speed, 0, 1));
   player.roll += (rollTarget - player.roll) * (1 - Math.exp(-8 * STEP));
 
-  const climbCost = Math.max(0, player.smoothedClimb) * 3.1;
-  const diveGain = Math.max(0, -player.smoothedClimb) * 2.2 + Math.max(0, -player.pitch) * 5;
-  const targetSpeed = p.speed + (input.boost ? p.boost : 0) - climbCost + diveGain;
-  const response = targetSpeed > player.speed ? accel : drag;
+  const targetSpeed =
+    player.smoothedThrottle >= 0
+      ? player.smoothedThrottle * (p.speed + (input.boost ? p.boost : 0))
+      : player.smoothedThrottle * p.speed * 0.55;
+  const response = Math.abs(targetSpeed) > Math.abs(player.speed) ? accel : drag;
   player.speed += (targetSpeed - player.speed) * (1 - Math.exp(-response * STEP));
-  player.speed = clamp(player.speed, p.speed * 0.5, p.speed + p.boost * 1.25);
+  player.speed = clamp(player.speed, -p.speed * 0.55, p.speed + p.boost * 1.25);
 
   const dir = forward(player.yaw, player.pitch);
+  const lift = player.smoothedClimb * liftSpeed;
   const velocityResponse = 1 - Math.exp(-9 * STEP);
   player.vel.x += (dir.x * player.speed - player.vel.x) * velocityResponse;
-  player.vel.y += (dir.y * player.speed - player.vel.y) * velocityResponse;
+  player.vel.y += (dir.y * player.speed + lift - player.vel.y) * velocityResponse;
   player.vel.z += (dir.z * player.speed - player.vel.z) * velocityResponse;
 
   player.pos.x += player.vel.x * STEP;
@@ -288,27 +412,7 @@ function stepPlayer(world: World, input: FlyInput): void {
   if (player.bumpCooldown > 0) player.bumpCooldown--;
   if (player.invulnFrames > 0) player.invulnFrames--;
   if (player.cooldownFrames > 0) player.cooldownFrames--;
-
-  if (input.sting && player.cooldownFrames <= 0) {
-    let best: Foe | null = null;
-    let bestDistance = Number.POSITIVE_INFINITY;
-    for (const foe of world.foes) {
-      if (!foe.alive) continue;
-      const d = dist3(foe.pos, player.pos);
-      if (d < bestDistance) {
-        best = foe;
-        bestDistance = d;
-      }
-    }
-    if (best && bestDistance <= tuning.sting.range) {
-      best.hp -= tuning.sting.damage;
-      if (best.hp <= 0) {
-        best.alive = false;
-        world.score += best.score;
-      }
-    }
-    player.cooldownFrames = tuning.sting.cooldownFrames;
-  }
+  trySting(world, input);
 }
 
 function stepFoes(world: World): void {
@@ -423,6 +527,9 @@ export function hashWorld(world: World): string {
     q(world.player.vel.x),
     q(world.player.vel.y),
     q(world.player.vel.z),
+    q(world.player.smoothedThrottle),
+    world.player.perched ? 1 : 0,
+    q(world.player.perchY),
     world.player.invulnFrames,
     world.player.cooldownFrames,
     world.player.bumpCooldown,

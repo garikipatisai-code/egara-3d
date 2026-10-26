@@ -49,6 +49,9 @@ input.attachTouch({
   cap: hud.touch.cap,
   sting: hud.touch.sting,
   boost: hud.touch.boost,
+  up: hud.touch.up,
+  down: hud.touch.down,
+  perch: hud.touch.perch,
   onLook: (dx, dy) => stage.look(dx, dy)
 });
 
@@ -70,6 +73,7 @@ let frames = 0;
 let fpsTime = 0;
 let qualityScale = 1;
 let slowTime = 0;
+let lastPerched = false;
 
 function showTitle(): void {
   runtime.returnToTitle();
@@ -132,6 +136,7 @@ function beginChapter(): void {
     runtime.story.events.length = 0;
   }
   cardOpen = false;
+  lastPerched = false;
   const chapter = runtime.chapter;
   const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(
     chapter?.location ?? ''
@@ -274,6 +279,14 @@ function renderCurrent(): void {
 function syncHud(): void {
   const story = runtime.story;
   if (!story) return;
+  const player = story.world.player;
+  canvas.dataset.speed = player.speed.toFixed(2);
+  canvas.dataset.perched = String(player.perched);
+  canvas.dataset.altitude = player.pos.y.toFixed(2);
+  if (player.perched !== lastPerched) {
+    lastPerched = player.perched;
+    hud.toast(player.perched ? t('perched') : t('airborne'));
+  }
   const objective = currentObjective(story);
   hud.setObjective(objective ? localized(objective.label) : '');
   hud.setShards(collectedShardIds(story).length, totalShards(story));
@@ -395,7 +408,11 @@ function frame(now: number): void {
   }
 
   if (runtime.screen === 'playing' && runtime.story && !cardOpen) {
-    const events = runtime.step(input.poll(), dt);
+    const tickBefore = runtime.story.world.tick;
+    const polled = input.poll();
+    canvas.dataset.perchInput = String(polled.perch === true);
+    const events = runtime.step(polled, dt);
+    if (runtime.story.world.tick > tickBefore) input.consumePerch();
     handleEvents(events);
     const bumps = consumeBumps(runtime.story.world);
     for (const bump of bumps) {

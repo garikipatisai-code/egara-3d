@@ -18,3 +18,7 @@ Deferred work, recorded so it is not lost. Not a promise; revisit at the named g
 | Collision fidelity for curved/rotated props | OBBs for buildings; props still approximate | P5 |
 | `npm run test:e2e` also collects `tests/unit/*.spec.ts`; Vitest specs use JSON imports Playwright cannot load | Pre-existing Playwright `testDir` config; smoke path used explicitly in the gate | fix `playwright.config.ts` in a dedicated gate |
 | Quality defaults to high on first run | Auto-fallback handles slow devices; explicit low option exists | device run, then revisit default |
+| Perch only on ground/roof/solid tops | Wall/ceiling perching needs orientation work | P6 |
+| No auto-perch snap when very close | Explicit F is clearer; revisit after playtest | P6 |
+| Reverse throttle is bound to S | May feel unnecessary; playtest | P6 |
+| Perch does not use decor meshes without a sim collider | Only buildings/safe/desk tops | P6 |

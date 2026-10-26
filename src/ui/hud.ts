@@ -97,6 +97,9 @@ export interface Hud {
     cap: HTMLElement;
     sting: HTMLButtonElement;
     boost: HTMLButtonElement;
+    up: HTMLButtonElement;
+    down: HTMLButtonElement;
+    perch: HTMLButtonElement;
   };
 }
 
@@ -155,6 +158,15 @@ export function createHud(): Hud {
   const boost = el('button', 'hud-touch-button hud-touch-boost', touch);
   boost.type = 'button';
   boost.textContent = t('boost');
+  const up = el('button', 'hud-touch-button hud-touch-up', touch);
+  up.type = 'button';
+  up.textContent = t('up');
+  const down = el('button', 'hud-touch-button hud-touch-down', touch);
+  down.type = 'button';
+  down.textContent = t('down');
+  const perch = el('button', 'hud-touch-button hud-touch-perch', touch);
+  perch.type = 'button';
+  perch.textContent = t('perch');
   const isTouch =
     typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
       ? true
@@ -259,6 +271,10 @@ export function createHud(): Hud {
       font-size:.78rem;pointer-events:auto;touch-action:none;user-select:none;z-index:2}
     .hud-touch-sting{right:1.4rem}
     .hud-touch-boost{right:6.2rem;bottom:2.2rem;width:56px;height:56px;opacity:.88}
+    .hud-touch-up{right:1.4rem;bottom:6.4rem;width:56px;height:56px;opacity:.9}
+    .hud-touch-down{right:1.4rem;bottom:9.8rem;width:56px;height:56px;opacity:.9}
+    .hud-touch-perch{right:6.2rem;bottom:6.2rem;width:60px;height:60px;opacity:.92;
+      border-color:#8ad8ff;color:#bfe8ff}
     @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
   `;
   document.head.append(style);
@@ -569,6 +585,9 @@ export function createHud(): Hud {
       muteButton.setAttribute('aria-pressed', String(muted));
       sting.textContent = t('sting');
       boost.textContent = t('boost');
+      up.textContent = t('up');
+      down.textContent = t('down');
+      perch.textContent = t('perch');
     },
     toast: (text) => {
       toastNode.textContent = text;
@@ -584,6 +603,6 @@ export function createHud(): Hud {
     onMute: (handler) => {
       muteHandler = handler;
     },
-    touch: { stick, cap, sting, boost }
+    touch: { stick, cap, sting, boost, up, down, perch }
   };
 }

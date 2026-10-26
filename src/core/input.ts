@@ -10,6 +10,9 @@ export interface TouchTargets {
   cap: HTMLElement;
   sting: HTMLButtonElement;
   boost: HTMLButtonElement;
+  up: HTMLButtonElement;
+  down: HTMLButtonElement;
+  perch: HTMLButtonElement;
   onLook: (dx: number, dy: number) => void;
 }
 
@@ -17,7 +20,9 @@ export interface TouchTargets {
 export class InputMap {
   private readonly down = new Set<string>();
   private pausePressed = false;
+  private perchPressed = false;
   private touchTurn = 0;
+  private touchThrottle = 0;
   private touchClimb = 0;
   private touchBoost = false;
   private touchSting = false;
@@ -31,6 +36,7 @@ export class InputMap {
       if (event.repeat) return;
       this.down.add(event.code);
       if (event.code === 'KeyP' || event.code === 'Escape') this.pausePressed = true;
+      if (event.code === 'KeyF') this.perchPressed = true;
     };
     const onUp = (event: KeyboardEvent) => this.down.delete(event.code);
     const onBlur = () => {
@@ -95,7 +101,7 @@ export class InputMap {
         const cappedY = dy * scale;
         targets.cap.style.transform = `translate(calc(-50% + ${cappedX}px), calc(-50% + ${cappedY}px))`;
         this.touchTurn = clamp(cappedX / radius, -1, 1);
-        this.touchClimb = clamp(-cappedY / radius, -1, 1);
+        this.touchThrottle = clamp(-cappedY / radius, -1, 1);
       } else if (event.pointerId === lookId) {
         targets.onLook(event.clientX - lookX, event.clientY - lookY);
         lookX = event.clientX;
@@ -108,7 +114,7 @@ export class InputMap {
         stickId = null;
         targets.stick.classList.remove('is-active');
         this.touchTurn = 0;
-        this.touchClimb = 0;
+        this.touchThrottle = 0;
       }
       if (event.pointerId === lookId) lookId = null;
     };
@@ -127,6 +133,24 @@ export class InputMap {
     const onBoostUp = () => {
       this.touchBoost = false;
     };
+    const onUpDown = (event: PointerEvent) => {
+      event.preventDefault();
+      this.touchClimb = 1;
+    };
+    const onUpUp = () => {
+      this.touchClimb = 0;
+    };
+    const onDownDown = (event: PointerEvent) => {
+      event.preventDefault();
+      this.touchClimb = -1;
+    };
+    const onDownUp = () => {
+      this.touchClimb = 0;
+    };
+    const onPerchDown = (event: PointerEvent) => {
+      event.preventDefault();
+      this.perchPressed = true;
+    };
 
     targets.canvas.addEventListener('pointerdown', onDown);
     targets.canvas.addEventListener('pointermove', onMove);
@@ -140,6 +164,15 @@ export class InputMap {
     targets.boost.addEventListener('pointerup', onBoostUp);
     targets.boost.addEventListener('pointercancel', onBoostUp);
     targets.boost.addEventListener('pointerleave', onBoostUp);
+    targets.up.addEventListener('pointerdown', onUpDown);
+    targets.up.addEventListener('pointerup', onUpUp);
+    targets.up.addEventListener('pointercancel', onUpUp);
+    targets.up.addEventListener('pointerleave', onUpUp);
+    targets.down.addEventListener('pointerdown', onDownDown);
+    targets.down.addEventListener('pointerup', onDownUp);
+    targets.down.addEventListener('pointercancel', onDownUp);
+    targets.down.addEventListener('pointerleave', onDownUp);
+    targets.perch.addEventListener('pointerdown', onPerchDown);
 
     this.detach.push(
       () => targets.canvas.removeEventListener('pointerdown', onDown),
@@ -153,12 +186,22 @@ export class InputMap {
       () => targets.boost.removeEventListener('pointerdown', onBoostDown),
       () => targets.boost.removeEventListener('pointerup', onBoostUp),
       () => targets.boost.removeEventListener('pointercancel', onBoostUp),
-      () => targets.boost.removeEventListener('pointerleave', onBoostUp)
+      () => targets.boost.removeEventListener('pointerleave', onBoostUp),
+      () => targets.up.removeEventListener('pointerdown', onUpDown),
+      () => targets.up.removeEventListener('pointerup', onUpUp),
+      () => targets.up.removeEventListener('pointercancel', onUpUp),
+      () => targets.up.removeEventListener('pointerleave', onUpUp),
+      () => targets.down.removeEventListener('pointerdown', onDownDown),
+      () => targets.down.removeEventListener('pointerup', onDownUp),
+      () => targets.down.removeEventListener('pointercancel', onDownUp),
+      () => targets.down.removeEventListener('pointerleave', onDownUp),
+      () => targets.perch.removeEventListener('pointerdown', onPerchDown)
     );
   }
 
   private resetTouch(): void {
     this.touchTurn = 0;
+    this.touchThrottle = 0;
     this.touchClimb = 0;
     this.touchBoost = false;
     this.touchSting = false;
@@ -172,13 +215,22 @@ export class InputMap {
   poll(): FlyInput {
     const key = (code: string) => this.down.has(code);
     const keyboardTurn = (key('ArrowRight') || key('KeyD') ? 1 : 0) - (key('ArrowLeft') || key('KeyA') ? 1 : 0);
-    const keyboardClimb = (key('ArrowUp') || key('KeyW') ? 1 : 0) - (key('ArrowDown') || key('KeyS') ? 1 : 0);
+    const keyboardThrottle =
+      (key('ArrowUp') || key('KeyW') ? 1 : 0) - (key('ArrowDown') || key('KeyS') ? 1 : 0);
+    const keyboardClimb = (key('KeyE') ? 1 : 0) - (key('KeyQ') ? 1 : 0);
     return {
       turn: clamp(keyboardTurn + this.touchTurn, -1, 1),
       climb: clamp(keyboardClimb + this.touchClimb, -1, 1),
+      throttle: clamp(keyboardThrottle + this.touchThrottle, -1, 1),
+      perch: this.perchPressed,
       boost: key('ShiftLeft') || key('ShiftRight') || this.touchBoost,
       sting: key('Space') || key('KeyJ') || this.touchSting
     };
+  }
+
+  /** Clear a latched perch press after the sim has actually consumed a step. */
+  consumePerch(): void {
+    this.perchPressed = false;
   }
 
   consumePause(): boolean {

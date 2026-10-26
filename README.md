@@ -12,8 +12,8 @@ airport road, a glass house, and the people who loom over them.
 npm install
 npm run dev        # local dev server
 npm run build      # static build in dist/
-npm test           # unit tests (Vitest, 74)
-npx playwright test tests/smoke   # e2e smoke + story flow (13 + live)
+npm test           # unit tests (Vitest, 81)
+npx playwright test tests/smoke   # e2e smoke + story flow (15 + live)
 ```
 
 Note: `npm run test:e2e` currently also collects unit specs (pre-existing
@@ -21,8 +21,9 @@ Playwright `testDir`); use the explicit smoke path above.
 
 ## Feel & visuals (P4)
 
-- **Flight:** inertial acceleration/drag, speed-dependent turn, banking,
-  climb/dive speed trade, smoothed input.
+- **Flight:** throttle/hover with no auto-forward, Q/E vertical control,
+  inertial acceleration/drag, speed-dependent turn and banking, perch/take-off,
+  smoothed input.
 - **Collision:** rotated-box slide with speed loss + bump sparks, arena edge
   response, and a camera that pulls in before walls.
 - **Look:** procedural textures (concrete/asphalt/wood/marble/fabric/metal/
@@ -35,10 +36,15 @@ Playwright `testDir`); use the explicit smoke path above.
 
 ## Controls
 
-- Fly: WASD or arrows; Shift boost; Space sting / sabotage; P/Esc pause.
+- **Hover:** no throttle = the fly stops in the air. There is no automatic
+  forward motion.
+- **Move:** W/S throttle forward/back; A/D turn; Q/E descend/ascend.
+- **Perch:** F settles on the ground or a rooftop/desk/safe top when close; F or
+  any throttle/vertical input takes off again.
+- Boost: Shift; sting/sabotage: Space; pause: P/Esc.
 - Look: drag with the mouse; wheel zooms.
-- Touch: left half is a virtual stick; drag the right half to look; Sting and
-  Boost buttons sit bottom-right.
+- Touch: left stick = throttle/turn; right-half drag = look; Up/Down, Sting,
+  Boost and Perch buttons sit bottom-right.
 - Language: EN/TE toggle on the title, chapter select, briefing and pause.
 
 ## Story mode (P3 — complete)
@@ -80,5 +86,7 @@ docs/         specs, plans, research/world bible, QA
 - P3 plan: `docs/plans/2026-10-26-story-p3.md`
 - P4 feel/visual spec: `docs/specs/2026-10-26-feel-visual.md`
 - P4 plan: `docs/plans/2026-10-26-polish-p4.md`
+- P5 control/perch spec: `docs/specs/2026-10-26-control-perch.md`
+- P5 plan: `docs/plans/2026-10-26-control-p5.md`
 - Performance: `docs/qa/perf.md`
 - Debt: `docs/debt-ledger.md`

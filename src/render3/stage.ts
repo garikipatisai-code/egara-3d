@@ -494,7 +494,11 @@ export class Stage {
     const p = world.player;
     const boosting = p.speed > world.tuning.player.speed + 0.6;
 
-    this.gali.position.set(p.pos.x, p.pos.y + Math.sin(this.time * 9) * 0.025, p.pos.z);
+    this.gali.position.set(
+      p.pos.x,
+      p.pos.y + (p.perched ? 0 : Math.sin(this.time * 9) * 0.025),
+      p.pos.z
+    );
     this.gali.rotation.set(0, p.yaw, 0);
     this.gali.rotateX(-p.pitch);
     this.gali.rotateZ(p.roll);
@@ -504,7 +508,7 @@ export class Stage {
     const blobScale = 1 + Math.max(0, p.pos.y - 2) * 0.055;
     this.blob.scale.setScalar(blobScale);
     (this.blob.material as THREE.MeshBasicMaterial).opacity = p.alive ? 0.5 : 0;
-    const flap = Math.sin(this.time * 38) * 0.55;
+    const flap = Math.sin(this.time * (p.perched ? 9 : 38)) * (p.perched ? 0.16 : 0.55);
     const wingL = this.gali.getObjectByName('wingL');
     const wingR = this.gali.getObjectByName('wingR');
     const wingLBlur = this.gali.getObjectByName('wingLBlur');
@@ -527,7 +531,7 @@ export class Stage {
       wingRBlur.visible = true;
     }
     if (clipped) this.gali.rotateZ(-0.18);
-    if (p.alive && !this.hubMode) {
+    if (p.alive && !this.hubMode && !p.perched) {
       this.particles.trail(
         p.pos.x,
         p.pos.y,
