@@ -128,7 +128,7 @@ export function buildArena(): THREE.Group {
   ring.position.y = 0.05;
   arena.add(ring);
 
-  const palette = [0x2e3a5e, 0x3a2a4e, 0x2e4a3e, 0x4a3a2e];
+  const palette = [0x3a4a6e, 0x4a3a5e, 0x3a5a4e, 0x5a4a3a];
   let seed = 7;
   const rand = () => {
     seed = (seed * 16807) % 2147483647;

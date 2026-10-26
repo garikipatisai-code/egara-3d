@@ -19,9 +19,11 @@ export class Stage {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.3;
 
-    this.scene.background = new THREE.Color(0x0d1530);
-    this.scene.fog = new THREE.Fog(0x0d1530, 60, 220);
+    this.scene.background = new THREE.Color(0x111a38);
+    this.scene.fog = new THREE.Fog(0x111a38, 60, 220);
 
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(400 * 3);
@@ -40,7 +42,7 @@ export class Stage {
     );
     this.scene.add(stars);
 
-    const hemi = new THREE.HemisphereLight(0x9abcf8, 0x2a3450, 1.35);
+    const hemi = new THREE.HemisphereLight(0x9abcf8, 0x3a4666, 1.8);
     this.scene.add(hemi);
     const sun = new THREE.DirectionalLight(0xffe9c0, 3.2);
     sun.position.set(40, 80, 20);

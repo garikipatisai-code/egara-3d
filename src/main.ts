@@ -24,9 +24,18 @@ function randomSeed(): number {
 }
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
-const stage = new Stage(canvas);
 const hud = createHud();
 const input = new InputMap();
+
+let stage: Stage;
+try {
+  stage = new Stage(canvas);
+} catch {
+  hud.showMenu('WebGL unavailable', 'Egara 3D needs WebGL. Please try a recent Chrome, Edge, Firefox, or Safari with hardware acceleration on.', [
+    { label: 'Retry', action: () => window.location.reload() }
+  ]);
+  throw new Error('Egara 3D requires WebGL');
+}
 input.attach(window);
 
 let save = loadSave();
