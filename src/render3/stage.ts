@@ -35,6 +35,8 @@ export class Stage {
   private readonly moon: THREE.Group;
   private readonly lights = new THREE.Group();
   private shadowSun: THREE.DirectionalLight | null = null;
+  private accentLight: THREE.PointLight | null = null;
+  private accentBase = 0;
   private quality: 'high' | 'low' = 'high';
   private indoor = false;
   private worldGroup: THREE.Group | null = null;
@@ -241,6 +243,8 @@ export class Stage {
     );
     if (chapter.location === 'glass-house') accent.position.set(0, 18, -14);
     else accent.position.set(0, indoor ? 19 : 16, indoor ? 0 : -26);
+    this.accentLight = accent;
+    this.accentBase = accent.intensity;
     this.lights.add(accent);
     this.applyShadowQuality();
   }
@@ -271,12 +275,13 @@ export class Stage {
     });
     this.moon.visible = !this.indoor;
     this.stars.visible = !this.indoor;
+    if (this.accentLight) this.accentLight.intensity = high ? this.accentBase : 0;
   }
 
   setQuality(quality: 'high' | 'low'): void {
     this.quality = quality;
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.5 : 1)
+      Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.5 : 0.8)
     );
     this.applyQualityVisuals();
     this.applyShadowQuality();

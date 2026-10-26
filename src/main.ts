@@ -433,8 +433,8 @@ function frame(now: number): void {
       } else {
         slowTime = 0;
       }
-      const floor = quality === 'low' ? 0.55 : 0.65;
-      if (fps < 48 && qualityScale > floor) {
+      const floor = quality === 'low' ? 0.5 : 0.65;
+      if (fps < 55 && qualityScale > floor) {
         qualityScale = Math.max(floor, qualityScale - 0.1);
         stage.setRenderScale(qualityScale);
       } else if (fps > 57 && qualityScale < 1) {
