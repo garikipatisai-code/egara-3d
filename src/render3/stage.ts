@@ -286,7 +286,7 @@ export class Stage {
         const mesh = buildGarvaCar();
         const start = actor.path[0] ?? { x: 0, y: 0, z: 0 };
         mesh.position.set(start.x, start.y, start.z);
-        mesh.rotation.y = -Math.PI / 2;
+        mesh.rotation.y = Math.PI / 2;
         actors.add(mesh);
         this.actorMeshes.set(actor.id, mesh);
       }
