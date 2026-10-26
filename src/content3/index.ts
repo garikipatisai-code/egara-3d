@@ -101,8 +101,9 @@ function checkObjective(objective: ObjectiveDef, chapterId: string, errors: stri
     if ((objective.radius ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: escort needs radius`);
   }
   if (objective.kind === 'sabotage' || objective.kind === 'boss') {
-    if (!objective.targets || objective.targets.length < 2) {
-      errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs 2+ targets`);
+    const minimum = objective.kind === 'boss' ? 2 : 1;
+    if (!objective.targets || objective.targets.length < minimum) {
+      errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs ${minimum}+ targets`);
     }
     if ((objective.count ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs count`);
     if ((objective.radius ?? 0) <= 0) errors.push(`${chapterId}/${objective.id}: ${objective.kind} needs radius`);
@@ -138,6 +139,13 @@ export function validateChapters(defs: ChapterDef[] = CHAPTERS): string[] {
     if (chapter.boss) {
       if (!hasText(chapter.boss.name)) errors.push(`${chapter.id}: boss name needs EN+TE`);
       if (chapter.boss.nodes <= 0) errors.push(`${chapter.id}: boss needs nodes`);
+    }
+    if (
+      chapter.wingClipAfterObjective !== undefined &&
+      (chapter.wingClipAfterObjective < 0 ||
+        chapter.wingClipAfterObjective >= chapter.objectives.length)
+    ) {
+      errors.push(`${chapter.id}: wingClipAfterObjective out of range`);
     }
 
     for (const actor of chapter.actors ?? []) {

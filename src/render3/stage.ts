@@ -191,8 +191,14 @@ export class Stage {
     sun.position.set(40, 80, 20);
     this.lights.add(sun);
 
-    const accent = new THREE.PointLight(chapter.palette.accent, indoor ? 85 : 90, indoor ? 95 : 110, 1.8);
-    accent.position.set(0, indoor ? 19 : 16, indoor ? 0 : -26);
+    const accent = new THREE.PointLight(
+      chapter.palette.accent,
+      chapter.location === 'glass-house' ? 115 : indoor ? 85 : 90,
+      indoor ? 95 : 110,
+      1.8
+    );
+    if (chapter.location === 'glass-house') accent.position.set(0, 18, -14);
+    else accent.position.set(0, indoor ? 19 : 16, indoor ? 0 : -26);
     this.lights.add(accent);
   }
 
@@ -243,6 +249,21 @@ export class Stage {
           })
         );
         mesh = column;
+      } else if (hazard.id.includes('search')) {
+        const beam = new THREE.Mesh(
+          new THREE.ConeGeometry(hazard.radius, 20, 16, 1, true),
+          new THREE.MeshBasicMaterial({
+            color: 0xfff2c8,
+            transparent: true,
+            opacity: 0.055,
+            side: THREE.DoubleSide,
+            depthWrite: false
+          })
+        );
+        beam.position.y = -10;
+        const group = new THREE.Group();
+        group.add(beam);
+        mesh = group;
       } else if (hazard.kind === 'smoke') {
         mesh = new THREE.Mesh(
           new THREE.SphereGeometry(Math.max(1, hazard.radius * 0.55), 12, 9),
@@ -356,8 +377,16 @@ export class Stage {
     const flap = Math.sin(this.time * 38) * 0.55;
     const wingL = this.gali.getObjectByName('wingL');
     const wingR = this.gali.getObjectByName('wingR');
-    if (wingL) wingL.rotation.z = 0.5 + flap;
-    if (wingR) wingR.rotation.z = -0.5 - flap;
+    const clipped = story?.wingClipped === true;
+    if (wingL) {
+      wingL.rotation.z = 0.5 + flap;
+      wingL.visible = !clipped;
+    }
+    if (wingR) {
+      wingR.rotation.z = -0.5 - flap;
+      wingR.visible = true;
+    }
+    if (clipped) this.gali.rotateZ(-0.18);
 
     world.foes.forEach((foe, i) => {
       const drone = this.drones[i];

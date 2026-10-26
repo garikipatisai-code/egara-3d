@@ -151,6 +151,7 @@ export interface ChapterDef {
   objectives: ObjectiveDef[];
   actors?: ActorDef[];
   boss?: BossDef;
+  wingClipAfterObjective?: number;
   waves?: WaveDef[];
   shards?: ShardDef[];
   hazards?: HazardDef[];

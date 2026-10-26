@@ -28,6 +28,7 @@ export type StoryEvent =
   | { type: 'shard'; id: string; pos: Vec3 }
   | { type: 'write'; count: number }
   | { type: 'node'; index: number; kind: 'sabotage' | 'boss' }
+  | { type: 'wingClip' }
   | { type: 'hurt'; lives: number }
   | { type: 'respawn'; pos: Vec3 }
   | { type: 'sting'; pos: Vec3 }
@@ -69,6 +70,7 @@ export interface StoryState {
   waveFired: boolean[];
   writeIndex: number;
   interactCooldown: number;
+  wingClipped: boolean;
   midTriggered: boolean;
 }
 
@@ -96,8 +98,9 @@ export function storySolids(chapter: ChapterDef): Building[] {
   return [...base, ...(chapter.solids ?? [])];
 }
 
-export function createStoryState(seed: number, chapter: ChapterDef): StoryState {
+export function createStoryState(seed: number, chapter: ChapterDef, bonusLives = 0): StoryState {
   const tuning = buildTuning(chapter);
+  tuning.player.lives += Math.max(0, Math.floor(bonusLives));
   const world = createWorld(seed, tuning, storySolids(chapter));
   world.player.pos = copyVec(chapter.spawn.pos);
   world.player.yaw = chapter.spawn.yaw;
@@ -138,6 +141,7 @@ export function createStoryState(seed: number, chapter: ChapterDef): StoryState 
     waveFired: (chapter.waves ?? []).map(() => false),
     writeIndex: 0,
     interactCooldown: 0,
+    wingClipped: false,
     midTriggered: false
   };
 
@@ -209,6 +213,16 @@ export function targetPosition(
     default:
       return null;
   }
+}
+
+function applyWingClip(state: StoryState): void {
+  if (state.wingClipped) return;
+  state.wingClipped = true;
+  const player = state.world.tuning.player;
+  player.speed *= 0.65;
+  player.boost = 0;
+  player.yawRate *= 0.85;
+  state.events.push({ type: 'wingClip' });
 }
 
 function completeObjective(state: StoryState): void {
@@ -486,6 +500,13 @@ export function stepStory(state: StoryState, input: FlyInput): void {
     if (!objective || !objectiveDone(state, objective)) break;
     completeObjective(state);
   }
+
+  if (
+    state.chapter.wingClipAfterObjective !== undefined &&
+    state.objectiveIndex > state.chapter.wingClipAfterObjective
+  ) {
+    applyWingClip(state);
+  }
 }
 
 export interface StoryAdvanceResult {
@@ -537,6 +558,7 @@ export function hashStory(state: StoryState): string {
     state.deaths,
     state.writeIndex,
     state.interactCooldown,
+    state.wingClipped ? 1 : 0,
     PHASE_CODE[state.phase]
   ];
 

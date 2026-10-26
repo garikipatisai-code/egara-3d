@@ -54,7 +54,15 @@ const EN = {
   time: 'Time',
   falls: 'Falls',
   continueHint: 'Continue from your last chapter',
-  newHint: 'Begin at the first flight'
+  newHint: 'Begin at the first flight',
+  epilogue: 'The Wing',
+  epilogueBody:
+    'The Storyteller closes the glass wing. The tale is whole, or it is not; either way it can be told again.',
+  amuletEarned: 'Amulet earned — one extra wingbeat in every tale.',
+  amuletMissing: 'The wing is not whole. Twelve memories make the amulet.',
+  amulet: 'Amulet',
+  oneWing: 'One wing',
+  newTale: 'New tale'
 } as const;
 
 export type TextKey = keyof typeof EN;
@@ -111,7 +119,15 @@ const TE: Record<TextKey, string> = {
   time: 'సమయం',
   falls: 'పడిపోయినవి',
   continueHint: 'చివరి అధ్యాయం నుండి కొనసాగించు',
-  newHint: 'మొదటి ఎగురుడుతో ప్రారంభించు'
+  newHint: 'మొదటి ఎగురుడుతో ప్రారంభించు',
+  epilogue: 'రెక్క',
+  epilogueBody:
+    'కథకురాలు గాజు రెక్కను మూస్తుంది. కథ పూర్తయింది, లేదా పూర్తి కాలేదు; ఏదైనా మళ్లీ చెప్పవచ్చు.',
+  amuletEarned: 'తాయెత్తు దొరికింది — ప్రతి కథలో ఒక అదనపు రెక్క కదలిక.',
+  amuletMissing: 'రెక్క పూర్తిగా లేదు. పన్నెండు జ్ఞాపకాలు తాయెత్తును చేస్తాయి.',
+  amulet: 'తాయెత్తు',
+  oneWing: 'ఒక రెక్క',
+  newTale: 'కొత్త కథ'
 };
 
 const DICTS: Record<Lang, Record<TextKey, string>> = { en: EN, te: TE };

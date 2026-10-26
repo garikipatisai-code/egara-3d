@@ -18,7 +18,9 @@ describe('chapter content', () => {
       'ch3',
       'ch4',
       'ch5',
-      'ch6'
+      'ch6',
+      'ch7',
+      'ch8'
     ]);
   });
 
@@ -66,6 +68,21 @@ describe('chapter content', () => {
     const diviner = getChapter('ch6');
     expect(diviner?.boss?.nodes).toBe(3);
     expect(diviner?.objectives[0].kind).toBe('boss');
+
+    const glassHouse = getChapter('ch7');
+    expect(glassHouse?.objectives.map((objective) => objective.kind)).toEqual([
+      'reach',
+      'sabotage',
+      'sabotage',
+      'reach'
+    ]);
+    expect(glassHouse?.objectives[1].targets).toHaveLength(1);
+
+    const cannon = getChapter('ch8');
+    expect(cannon?.boss?.nodes).toBe(4);
+    expect(cannon?.wingClipAfterObjective).toBe(0);
+    expect(cannon?.objectives[2].kind).toBe('sabotage');
+    expect(cannon?.objectives[2].targets).toHaveLength(1);
   });
 
   it('merges chapter tuning over the baseline', () => {

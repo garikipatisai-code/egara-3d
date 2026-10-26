@@ -33,6 +33,7 @@ function button(
 export interface Hud {
   showTitle(opts: {
     hasContinue: boolean;
+    amulet: boolean;
     onStart: () => void;
     onContinue: () => void;
     onChapters: () => void;
@@ -41,6 +42,7 @@ export interface Hud {
   }): void;
   showSelect(opts: {
     cards: SelectCard[];
+    amulet: boolean;
     onPick: (id: string) => void;
     onBack: () => void;
     onLang: () => void;
@@ -67,10 +69,13 @@ export interface Hud {
     chapter: ChapterDef;
     result: RuntimeResult;
     nextTitle: string | null;
+    nextActionLabel?: string;
+    amulet: boolean;
     onNext: () => void;
     onChapters: () => void;
     onLang: () => void;
   }): void;
+  showEpilogue(opts: { amulet: boolean; onClose: () => void }): void;
   showCard(card: { title?: LocalizedText; body: LocalizedText }, onDismiss: () => void): void;
   hideCard(): void;
   showFatal(title: string, body: string, retry: string, onRetry: () => void): void;
@@ -235,6 +240,8 @@ export function createHud(): Hud {
       border:1px solid #5a2a1a;overflow:hidden}
     .hud-boss-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff7a3d,#ffd75e);
       transition:width .2s linear}
+    .hud-amulet{color:#ffd75e;margin:0;font-size:.9rem;letter-spacing:.02em;
+      text-shadow:0 0 12px rgb(255 215 94 / 30%)}
     .hud-fatal{color:#f3ecdd;max-width:44rem}
     .hud-fatal h2{color:#e8b04b}
     .hud-touch{position:absolute;inset:0;pointer-events:none}
@@ -296,12 +303,13 @@ export function createHud(): Hud {
   pauseButton.addEventListener('click', () => pauseHandler());
 
   return {
-    showTitle: ({ hasContinue, onStart, onContinue, onChapters, onLang, onMute }) => {
+    showTitle: ({ hasContinue, amulet, onStart, onContinue, onChapters, onLang, onMute }) => {
       setBar(false);
       hideBossBar();
       const parent = openScreen();
       const wrap = addHeader(parent, 'Egara 3D', t('title'), t('tagline'));
       el('p', 'hud-sub', wrap).textContent = isTouch ? t('touchHint') : t('controls');
+      if (amulet) el('p', 'hud-amulet', wrap).textContent = `✦ ${t('amuletEarned')}`;
       const row = el('div', 'hud-actions-row', wrap);
       button(row, t('start'), onStart, { primary: true });
       if (hasContinue) button(row, t('continue'), onContinue);
@@ -314,12 +322,13 @@ export function createHud(): Hud {
       focusFirst();
     },
 
-    showSelect: ({ cards, onPick, onBack, onLang, onMute }) => {
+    showSelect: ({ cards, amulet, onPick, onBack, onLang, onMute }) => {
       setBar(false);
       hideBossBar();
       const parent = openScreen();
       const wrap = el('div', 'hud-panel', parent);
       el('div', 'hud-kicker', wrap).textContent = t('chapterSelect');
+      if (amulet) el('p', 'hud-amulet', wrap).textContent = `✦ ${t('amuletEarned')}`;
       const grid = el('div', 'hud-grid', wrap);
       for (const card of cards) {
         const node = document.createElement('button');
@@ -421,7 +430,7 @@ export function createHud(): Hud {
       focusFirst();
     },
 
-    showDebrief: ({ chapter, result, nextTitle, onNext, onChapters, onLang }) => {
+    showDebrief: ({ chapter, result, nextTitle, nextActionLabel, amulet, onNext, onChapters, onLang }) => {
       setBar(false);
       hideBossBar();
       const parent = openScreen();
@@ -438,16 +447,34 @@ export function createHud(): Hud {
       stat(t('time'), formatTime(result.time));
       stat(t('shards'), `${result.shards}/${result.total}`);
       stat(t('falls'), String(result.deaths));
+      if (amulet) el('p', 'hud-amulet', panel).textContent = `✦ ${t('amuletEarned')}`;
       if (nextTitle) {
         const next = el('p', '', panel);
         next.textContent = `${t('nextChapter')}: ${nextTitle}`;
       }
       const row = el('div', 'hud-actions-row', panel);
-      if (nextTitle) button(row, t('nextChapter'), onNext, { primary: true });
+      if (nextTitle) button(row, nextActionLabel ?? t('nextChapter'), onNext, { primary: true });
       button(row, t('backToChapters'), onChapters);
       button(row, `${t('language')}: ${getLang() === 'en' ? t('english') : t('telugu')}`, onLang, {
         className: 'hud-btn-ghost'
       });
+      focusFirst();
+    },
+
+    showEpilogue: ({ amulet, onClose }) => {
+      setBar(false);
+      hideBossBar();
+      const parent = openScreen();
+      const panel = el('div', 'hud-panel-card', parent);
+      el('div', 'hud-kicker', panel).textContent = t('storySoFar');
+      const heading = el('h2', '', panel);
+      heading.textContent = t('epilogue');
+      const body = el('p', '', panel);
+      body.textContent = t('epilogueBody');
+      const charm = el('p', amulet ? 'hud-amulet' : 'hud-sub', panel);
+      charm.textContent = amulet ? `✦ ${t('amuletEarned')}` : t('amuletMissing');
+      const row = el('div', 'hud-actions-row', panel);
+      button(row, t('newTale'), onClose, { primary: true });
       focusFirst();
     },
 

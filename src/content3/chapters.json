@@ -1574,7 +1574,7 @@
   {
     "id": "ch7",
     "order": 7,
-    "enabled": false,
+    "enabled": true,
     "title": {
       "en": "The Glass House",
       "te": "గాజు ఇల్లు"
@@ -1585,22 +1585,22 @@
     },
     "location": "garva-house",
     "palette": {
-      "fog": "#0a0d16",
-      "sky": "#060810",
-      "key": "#e8f0ff",
-      "fill": "#2a3450",
-      "accent": "#e8b04b"
+      "fog": "#080b12",
+      "sky": "#04060a",
+      "key": "#dfe8ff",
+      "fill": "#22304a",
+      "accent": "#ffb060"
     },
     "bounds": {
-      "radius": 80,
+      "radius": 38,
       "minY": 2,
-      "maxY": 50
+      "maxY": 40
     },
     "spawn": {
       "pos": {
         "x": 0,
-        "y": 10,
-        "z": 32
+        "y": 8,
+        "z": 34
       },
       "yaw": 3.14159
     },
@@ -1608,48 +1608,235 @@
     "tuning": {
       "speed": 16,
       "boost": 10,
-      "arenaRadius": 80,
+      "arenaRadius": 38,
       "minAltitude": 2,
-      "maxAltitude": 50,
+      "maxAltitude": 40,
       "lives": 3
     },
     "objectives": [
       {
-        "id": "ch7-reach-vent",
+        "id": "ch7-vent",
         "kind": "reach",
-        "label": {
-          "en": "Find the vent",
-          "te": "వెంట్ కనుగొన"
-        },
         "target": {
-          "x": -10,
-          "y": 16,
-          "z": 4
+          "x": 0,
+          "y": 20,
+          "z": -34
         },
-        "radius": 5
+        "radius": 6,
+        "label": {
+          "en": "Reach the vent",
+          "te": "వెంట్ చేరుకో"
+        },
+        "hint": {
+          "en": "The house breathes through the ducts",
+          "te": "ఇల్లు డక్ట్‌ల ద్వారా ఊపిరి పీల్చుకుంటుంది"
+        }
+      },
+      {
+        "id": "ch7-policy",
+        "kind": "sabotage",
+        "count": 1,
+        "radius": 4,
+        "targets": [
+          {
+            "x": 18,
+            "y": 8,
+            "z": -22
+          }
+        ],
+        "label": {
+          "en": "Take Venu's policy",
+          "te": "వేణు పాలసీ తీసుకో"
+        },
+        "hint": {
+          "en": "The study desk, lower floor",
+          "te": "కింద అధ్యయన బల్ల"
+        }
+      },
+      {
+        "id": "ch7-case",
+        "kind": "sabotage",
+        "count": 1,
+        "radius": 4,
+        "targets": [
+          {
+            "x": 0,
+            "y": 12,
+            "z": -26
+          }
+        ],
+        "label": {
+          "en": "Free Shilpi",
+          "te": "షిల్పిని విడిపించు"
+        },
+        "hint": {
+          "en": "The glass case on the mezzanine",
+          "te": "మెజ్జనైన్‌పై గాజు పెట్టె"
+        }
+      },
+      {
+        "id": "ch7-exit",
+        "kind": "reach",
+        "target": {
+          "x": 0,
+          "y": 10,
+          "z": 34
+        },
+        "radius": 7,
+        "label": {
+          "en": "Get out",
+          "te": "బయటకు వెళ్లు"
+        }
       }
     ],
-    "waves": [],
+    "waves": [
+      {
+        "atSeconds": 12,
+        "count": 2,
+        "pos": {
+          "x": -10,
+          "y": 14,
+          "z": 10
+        }
+      },
+      {
+        "atSeconds": 24,
+        "count": 2,
+        "pos": {
+          "x": 10,
+          "y": 14,
+          "z": -10
+        }
+      },
+      {
+        "atSeconds": 0,
+        "atParanoia": 50,
+        "count": 2,
+        "pos": {
+          "x": 0,
+          "y": 16,
+          "z": 0
+        }
+      }
+    ],
     "shards": [],
-    "hazards": [],
+    "hazards": [
+      {
+        "id": "ch7-search-a",
+        "kind": "lamp",
+        "pos": {
+          "x": 0,
+          "y": 20,
+          "z": 8
+        },
+        "radius": 6,
+        "height": 4
+      },
+      {
+        "id": "ch7-search-b",
+        "kind": "lamp",
+        "pos": {
+          "x": 18,
+          "y": 16,
+          "z": -10
+        },
+        "radius": 5,
+        "height": 4
+      },
+      {
+        "id": "ch7-swatter",
+        "kind": "swatter",
+        "pos": {
+          "x": 0,
+          "y": 14,
+          "z": 0
+        },
+        "radius": 3,
+        "height": 9,
+        "periodSeconds": 7,
+        "activeSeconds": 1.2,
+        "path": [
+          {
+            "x": -20,
+            "y": 14,
+            "z": 0
+          },
+          {
+            "x": 20,
+            "y": 14,
+            "z": 0
+          }
+        ]
+      }
+    ],
     "cards": [
       {
         "id": "ch7-intro",
         "at": "intro",
+        "title": {
+          "en": "Locked in",
+          "te": "లోపల మూసుకుపోయింది"
+        },
         "body": {
-          "en": "Every door is locked. The vents are not.",
-          "te": "ప్రతి తలుపు మూసింది. వెంట్‌లు కాదు."
+          "en": "The doors are locked. The house is awake. Somewhere below, Shilpi is still.",
+          "te": "తలుపులు మూసిన. ఇల్లు మేల్కొని ఉంది. ఎక్కడో కింద, షిల్పి నిశ్చలంగా ఉంది."
+        }
+      },
+      {
+        "id": "ch7-mid",
+        "at": "mid",
+        "title": {
+          "en": "Venu's policy",
+          "te": "వేణు పాలసీ"
+        },
+        "body": {
+          "en": "Seven hundred crore, paid to the man who pulled him from the fire.",
+          "te": "నిప్పు నుండి లాగిన వాడికే ఏడు వందల కోట్లు."
+        }
+      },
+      {
+        "id": "ch7-outro",
+        "at": "outro",
+        "title": {
+          "en": "Her hand on the glass",
+          "te": "గాజుపై ఆమె చేయి"
+        },
+        "body": {
+          "en": "Shilpi's hand on the glass. Garva's voice below. The last door is open.",
+          "te": "గాజుపై షిల్పి చేయి. కింద గర్వ స్వరం. చివరి తలుపు తెరిచింది."
         }
       }
     ],
     "unlock": [
       "ch8"
+    ],
+    "solids": [
+      {
+        "x": -18,
+        "z": -22,
+        "r": 5,
+        "h": 8,
+        "w": 7,
+        "d": 5,
+        "rot": 0,
+        "colorIdx": 0
+      },
+      {
+        "x": 18,
+        "z": -22,
+        "r": 5,
+        "h": 7,
+        "w": 12,
+        "d": 6,
+        "rot": 0,
+        "colorIdx": 1
+      }
     ]
   },
   {
     "id": "ch8",
     "order": 8,
-    "enabled": false,
+    "enabled": true,
     "title": {
       "en": "The Cannon",
       "te": "ఫిరంగి"
@@ -1667,56 +1854,208 @@
       "accent": "#ff6a2a"
     },
     "bounds": {
-      "radius": 40,
+      "radius": 38,
       "minY": 2,
-      "maxY": 26
+      "maxY": 40
     },
     "spawn": {
       "pos": {
         "x": 0,
-        "y": 8,
-        "z": 22
+        "y": 10,
+        "z": 34
       },
       "yaw": 3.14159
     },
     "layout": "none",
     "tuning": {
-      "speed": 13,
-      "boost": 7,
-      "arenaRadius": 40,
+      "speed": 16,
+      "boost": 10,
+      "arenaRadius": 38,
       "minAltitude": 2,
-      "maxAltitude": 26,
-      "lives": 1
+      "maxAltitude": 40,
+      "lives": 3
     },
     "objectives": [
       {
-        "id": "ch8-reach-cannon",
-        "kind": "reach",
+        "id": "ch8-boss",
+        "kind": "boss",
+        "bossId": "garva",
+        "count": 4,
+        "radius": 4,
+        "targets": [
+          {
+            "x": -12,
+            "y": 12,
+            "z": -20
+          },
+          {
+            "x": 12,
+            "y": 12,
+            "z": -20
+          },
+          {
+            "x": -8,
+            "y": 22,
+            "z": -26
+          },
+          {
+            "x": 8,
+            "y": 22,
+            "z": -26
+          }
+        ],
         "label": {
-          "en": "Reach the cannon",
-          "te": "ఫిరంగి చేరుకో"
+          "en": "Break Garva",
+          "te": "గర్వను విచ్ఛిన్నం చేయి"
         },
-        "target": {
-          "x": 0,
-          "y": 6,
-          "z": -10
+        "hint": {
+          "en": "Sting each pillar",
+          "te": "ప్రతి స్తంభాన్ని కుట్టు"
+        }
+      },
+      {
+        "id": "ch8-needle",
+        "kind": "survive",
+        "seconds": 15,
+        "label": {
+          "en": "Outlast the needle",
+          "te": "సూదిని తట్టుకో"
+        }
+      },
+      {
+        "id": "ch8-cannon",
+        "kind": "sabotage",
+        "count": 1,
+        "radius": 4,
+        "targets": [
+          {
+            "x": 0,
+            "y": 8,
+            "z": -10
+          }
+        ],
+        "label": {
+          "en": "Fire the cannon",
+          "te": "ఫిరంగి పేల్చు"
         },
-        "radius": 4
+        "hint": {
+          "en": "Press Space at the cannon",
+          "te": "ఫిరంగి దగ్గర Space నొక్కండి"
+        }
       }
     ],
     "waves": [],
     "shards": [],
-    "hazards": [],
+    "hazards": [
+      {
+        "id": "ch8-needle",
+        "kind": "swatter",
+        "pos": {
+          "x": 0,
+          "y": 14,
+          "z": -16
+        },
+        "radius": 4,
+        "height": 6,
+        "periodSeconds": 6,
+        "activeSeconds": 1.2,
+        "path": [
+          {
+            "x": -20,
+            "y": 14,
+            "z": -16
+          },
+          {
+            "x": 20,
+            "y": 14,
+            "z": -16
+          }
+        ]
+      },
+      {
+        "id": "ch8-fire-a",
+        "kind": "fire",
+        "pos": {
+          "x": 0,
+          "y": 8,
+          "z": -18
+        },
+        "radius": 8,
+        "height": 10,
+        "activeAfterObjective": 1
+      },
+      {
+        "id": "ch8-fire-b",
+        "kind": "fire",
+        "pos": {
+          "x": 0,
+          "y": 8,
+          "z": 2
+        },
+        "radius": 6,
+        "height": 10,
+        "activeAfterObjective": 1
+      },
+      {
+        "id": "ch8-oxygen",
+        "kind": "fire",
+        "pos": {
+          "x": 0,
+          "y": 8,
+          "z": -4
+        },
+        "radius": 3,
+        "height": 6,
+        "activeAfterObjective": 1
+      }
+    ],
     "cards": [
       {
         "id": "ch8-intro",
         "at": "intro",
+        "title": {
+          "en": "The last door",
+          "te": "చివరి తలుపు"
+        },
         "body": {
-          "en": "One shot. One wing. One small thing left.",
-          "te": "ఒక పేలుడు. ఒక రెక్క. ఒక చిన్న వస్తువు మిగిలింది."
+          "en": "The house is a furnace. Garva is the last door.",
+          "te": "ఇల్లు ఒక కొలిమి. గర్వ చివరి తలుపు."
+        }
+      },
+      {
+        "id": "ch8-mid",
+        "at": "mid",
+        "title": {
+          "en": "One wing",
+          "te": "ఒక రెక్క"
+        },
+        "body": {
+          "en": "The needle takes a wing. The fall is not the end.",
+          "te": "సూది ఒక రెక్కను తీసుకుంటుంది. పతనం ముగింపు కాదు."
+        }
+      },
+      {
+        "id": "ch8-outro",
+        "at": "outro",
+        "title": {
+          "en": "One small thing",
+          "te": "ఒక చిన్న వస్తువు"
+        },
+        "body": {
+          "en": "One match. One shot. One small thing.",
+          "te": "ఒక అగ్గిపుల్ల. ఒక పేలుడు. ఒక చిన్న వస్తువు."
         }
       }
     ],
-    "unlock": []
+    "unlock": [],
+    "boss": {
+      "id": "garva",
+      "name": {
+        "en": "Garva",
+        "te": "గర్వ"
+      },
+      "nodes": 4
+    },
+    "wingClipAfterObjective": 0
   }
 ]

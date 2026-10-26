@@ -265,6 +265,103 @@ export function buildDustField(count = 260, radius = 26): THREE.Points {
   );
 }
 
+export function buildCannon(): THREE.Group {
+  const cannon = new THREE.Group();
+  const brass = mat(0xb08a3a, { emissive: 0x3a2a08, ei: 0.3 });
+  const wood = mat(0x3a2418);
+
+  const base = new THREE.Mesh(new THREE.BoxGeometry(7, 1.2, 7), wood);
+  cannon.add(base);
+  for (const side of [-1, 1]) {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.7, 12), wood);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(side * 3.2, 1.4, 0);
+    cannon.add(wheel);
+  }
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.5, 9, 10), brass);
+  barrel.rotation.x = -Math.PI / 2;
+  barrel.position.set(0, 3.4, -1.8);
+  cannon.add(barrel);
+  const muzzle = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.22, 6, 14), brass);
+  muzzle.position.set(0, 3.4, -6.2);
+  cannon.add(muzzle);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(1.1, 10, 8), mat(0x8a94a4));
+  ball.position.set(0, 3.8, -5.4);
+  cannon.add(ball);
+  cannon.name = 'cannon';
+  return cannon;
+}
+
+export function buildOxygenCylinder(): THREE.Group {
+  const tank = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 7, 12), mat(0x2a6a4a));
+  body.position.y = 3.5;
+  tank.add(body);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.1, 1.1, 8), mat(0xb8c4d4));
+  cap.position.y = 7.4;
+  tank.add(cap);
+  const valve = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.14, 5, 10), mat(0x8a94a4));
+  valve.rotation.x = Math.PI / 2;
+  valve.position.y = 8.1;
+  tank.add(valve);
+  tank.name = 'oxygen-cylinder';
+  return tank;
+}
+
+export function buildGlassCase(): THREE.Group {
+  const display = new THREE.Group();
+  const frameMat = mat(0x8a94a4);
+  const glassMat = new THREE.MeshLambertMaterial({
+    color: 0xbfe8ef,
+    transparent: true,
+    opacity: 0.22,
+    side: THREE.DoubleSide
+  });
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 8), glassMat);
+  display.add(glass);
+  for (const x of [-4, 4]) {
+    for (const z of [-4, 4]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, 8, 0.3), frameMat);
+      post.position.set(x, 0, z);
+      display.add(post);
+    }
+  }
+  const top = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.3, 8.4), frameMat);
+  top.position.y = 4;
+  display.add(top);
+  const locket = buildLocket();
+  locket.position.y = 0.6;
+  locket.scale.setScalar(0.55);
+  display.add(locket);
+  display.name = 'glass-case';
+  return display;
+}
+
+export function buildVent(): THREE.Group {
+  const vent = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(7, 5, 0.6), mat(0x3a3e48));
+  vent.add(frame);
+  for (let i = -2; i <= 2; i++) {
+    const slat = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.35, 0.3), mat(0x1a1c24));
+    slat.position.set(0, i * 0.9, 0.4);
+    vent.add(slat);
+  }
+  const glow = new THREE.Mesh(
+    new THREE.PlaneGeometry(6.2, 4.4),
+    new THREE.MeshBasicMaterial({
+      color: 0x8ad8ff,
+      transparent: true,
+      opacity: 0.16,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    })
+  );
+  glow.position.z = 0.5;
+  vent.add(glow);
+  vent.name = 'vent';
+  return vent;
+}
+
 /** Extra solid blocks declared in chapter data (visual + collision). */
 export function buildSolidBlocks(solids: Building[]): THREE.Group {
   const group = new THREE.Group();

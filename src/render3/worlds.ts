@@ -5,10 +5,14 @@ import { buildArenaLayout } from '../sim3d/arena';
 import {
   buildBalcony,
   buildCableLine,
+  buildCannon,
   buildDeskLamp,
   buildDustField,
+  buildGlassCase,
   buildLocket,
   buildMatchbox,
+  buildOxygenCylinder,
+  buildVent,
   buildMug,
   buildNeedle,
   buildPencil,
@@ -18,7 +22,7 @@ import {
   buildStreetLamp,
   buildWindowFrame
 } from './props';
-import { buildDiviner, buildGarvaCar, buildGlassWing, mat } from './models';
+import { buildDiviner, buildGarva, buildGarvaCar, buildGlassWing, mat } from './models';
 
 function buildLaneWorld(chapter: ChapterDef): THREE.Group {
   const world = new THREE.Group();
@@ -245,7 +249,7 @@ function buildChandelier(): THREE.Group {
   return chandelier;
 }
 
-function buildGarvaHouseWorld(): THREE.Group {
+function buildGarvaHouseWorld(storyProps = true): THREE.Group {
   const world = new THREE.Group();
   const marble = new THREE.MeshLambertMaterial({ color: 0x363c4c });
 
@@ -335,6 +339,16 @@ function buildGarvaHouseWorld(): THREE.Group {
   desk.position.set(18, 0, -22);
   world.add(desk);
 
+  if (storyProps) {
+    const display = buildGlassCase();
+    display.position.set(0, 12, -26);
+    world.add(display);
+
+    const vent = buildVent();
+    vent.position.set(0, 20, -34);
+    world.add(vent);
+  }
+
   const doorMat = mat(0xe8b04b, { emissive: 0x8a5a10, ei: 0.5 });
   for (const side of [-1, 1]) {
     const door = new THREE.Mesh(new THREE.BoxGeometry(6, 14, 0.6), doorMat);
@@ -342,6 +356,39 @@ function buildGarvaHouseWorld(): THREE.Group {
     world.add(door);
   }
 
+  return world;
+}
+
+function buildGlassHouseWorld(): THREE.Group {
+  const world = buildGarvaHouseWorld(false);
+
+  const garva = buildGarva();
+  garva.position.set(0, 0, -26);
+  garva.rotation.y = 0;
+  world.add(garva);
+
+  const cannon = buildCannon();
+  cannon.position.set(0, 6, -10);
+  world.add(cannon);
+
+  const oxygen = buildOxygenCylinder();
+  oxygen.position.set(0, 6, -4);
+  world.add(oxygen);
+
+  const shardMat = new THREE.MeshLambertMaterial({
+    color: 0x9ad4e8,
+    transparent: true,
+    opacity: 0.28,
+    side: THREE.DoubleSide
+  });
+  for (let i = 0; i < 12; i++) {
+    const shard = new THREE.Mesh(new THREE.PlaneGeometry(2.5 + (i % 3), 4 + (i % 4)), shardMat);
+    shard.position.set(-24 + i * 4.2, 2 + (i % 5) * 2.4, -30 + (i % 3) * 3);
+    shard.rotation.set(i * 0.4, i * 0.7, i * 0.2);
+    world.add(shard);
+  }
+
+  world.add(buildDustField(260, 32));
   return world;
 }
 
@@ -450,6 +497,8 @@ export function buildChapterWorld(chapter: ChapterDef): THREE.Group {
       return buildGarvaHouseWorld();
     case 'diviner-room':
       return buildDivinerWorld();
+    case 'glass-house':
+      return buildGlassHouseWorld();
     default:
       return buildLaneWorld(chapter);
   }

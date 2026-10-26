@@ -419,6 +419,82 @@ export function buildDiviner(): THREE.Group {
   return diviner;
 }
 
+/** Garva: a tall suited industrialist. Original design, no likeness. */
+export function buildGarva(): THREE.Group {
+  const garva = new THREE.Group();
+  const suit = mat(0x242833);
+  const shirt = mat(0xd8d0c0);
+  const skin = mat(0xa86a4a);
+  const hair = mat(0x1a1418);
+
+  for (const side of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.2, 14, 8), suit);
+    leg.position.set(side * 2.4, 7, 0);
+    garva.add(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.4, 5), mat(0x0a0a0c));
+    shoe.position.set(side * 2.4, 0.7, 1.2);
+    garva.add(shoe);
+  }
+
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5.6, 13, 10), suit);
+  torso.position.y = 20;
+  garva.add(torso);
+
+  const shirtFront = new THREE.Mesh(new THREE.BoxGeometry(3.2, 7, 0.5), shirt);
+  shirtFront.position.set(0, 21, 4.6);
+  garva.add(shirtFront);
+  const tie = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.4, 0.3), mat(0x4a1010));
+  tie.position.set(0, 20.5, 4.9);
+  garva.add(tie);
+
+  const shoulders = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), suit);
+  shoulders.scale.set(1, 0.4, 0.8);
+  shoulders.position.y = 26;
+  garva.add(shoulders);
+
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 2.4, 8), skin);
+  neck.position.y = 28;
+  garva.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(3.6, 12, 10), skin);
+  head.position.y = 31;
+  head.scale.set(0.9, 1.05, 0.92);
+  garva.add(head);
+  const hairCap = new THREE.Mesh(
+    new THREE.SphereGeometry(3.65, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5),
+    hair
+  );
+  hairCap.position.y = 31.3;
+  garva.add(hairCap);
+
+  const eyeMat = mat(0x141018);
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.32, 6, 5), eyeMat);
+    eye.position.set(side * 1.2, 31.2, 3.2);
+    garva.add(eye);
+  }
+
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.2, 12, 8), suit);
+    arm.position.set(side * 6.2, 18.5, 0.6);
+    arm.rotation.z = side * 0.22;
+    garva.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(1.6, 8, 6), skin);
+    hand.position.set(side * 7.5, 12.5, 1.2);
+    garva.add(hand);
+  }
+
+  const watch = new THREE.Mesh(
+    new THREE.TorusGeometry(0.8, 0.18, 5, 12),
+    mat(0xe8b04b, { emissive: 0x8a5a10, ei: 0.8 })
+  );
+  watch.position.set(7.5, 14.2, 1.2);
+  watch.rotation.x = Math.PI / 2;
+  garva.add(watch);
+
+  garva.name = 'garva';
+  return garva;
+}
+
 /** The glass wing on the Storyteller's bench. */
 export function buildGlassWing(): THREE.Group {
   const wing = new THREE.Group();

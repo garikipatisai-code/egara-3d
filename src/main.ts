@@ -74,6 +74,7 @@ function showTitle(): void {
   const next = runtime.continueChapter();
   hud.showTitle({
     hasContinue: next !== null,
+    amulet: save.amulet,
     onStart: () => openBriefing('ch1'),
     onContinue: () => {
       if (next) openBriefing(next.id);
@@ -90,6 +91,7 @@ function showSelect(): void {
   stage.loadHub();
   hud.showSelect({
     cards: runtime.selectCards(),
+    amulet: save.amulet,
     onPick: openBriefing,
     onBack: showTitle,
     onLang: switchLanguage,
@@ -103,7 +105,11 @@ function openBriefing(id: string): void {
   if (!chapter) return;
   cardOpen = false;
   hud.hideCard();
-  audio.setScene(chapter.location === 'workshop' ? 'workshop' : 'lane');
+  audio.setScene(
+    ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(chapter.location)
+      ? 'workshop'
+      : 'lane'
+  );
   stage.loadChapter(chapter);
   stage.sync(runtime.story, 0);
   hud.showBriefing({
@@ -123,7 +129,10 @@ function beginChapter(): void {
   }
   cardOpen = false;
   const chapter = runtime.chapter;
-  audio.setScene(chapter?.location === 'workshop' ? 'workshop' : 'lane');
+  const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(
+    chapter?.location ?? ''
+  );
+  audio.setScene(indoor ? 'workshop' : 'lane');
   audio.setTension(0);
   hud.showPlaying();
   syncHud();
@@ -149,7 +158,9 @@ function showPause(): void {
 
 function resumeChapter(): void {
   runtime.resume();
-  audio.setScene(runtime.chapter?.location === 'workshop' ? 'workshop' : 'lane');
+  const location = runtime.chapter?.location ?? '';
+  const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(location);
+  audio.setScene(indoor ? 'workshop' : 'lane');
   hud.showPlaying();
 }
 
@@ -167,17 +178,32 @@ function showDebrief(): void {
   }
   audio.setScene('menu');
   runtime.showDebrief();
-  const next = runtime.nextChapter();
+  const isFinale = chapter.id === 'ch8';
+  const next = isFinale ? null : runtime.nextChapter();
   hud.showDebrief({
     chapter,
     result,
-    nextTitle: next ? localized(next.title) : null,
+    nextTitle: isFinale ? t('epilogue') : next ? localized(next.title) : null,
+    nextActionLabel: isFinale ? t('epilogue') : t('nextChapter'),
+    amulet: save.amulet,
     onNext: () => {
+      if (isFinale) {
+        showEpilogue();
+        return;
+      }
       const nextChapter = runtime.nextChapter();
       if (nextChapter) openBriefing(nextChapter.id);
     },
     onChapters: showSelect,
     onLang: switchLanguage
+  });
+}
+
+function showEpilogue(): void {
+  audio.setScene('menu');
+  hud.showEpilogue({
+    amulet: save.amulet,
+    onClose: showTitle
   });
 }
 
@@ -290,6 +316,12 @@ function handleEvents(events: StoryEvent[]): void {
       if (pos) stage.burst(pos.x, pos.y, pos.z, true);
       stage.punch();
       audio.play('hit');
+    } else if (event.type === 'wingClip') {
+      const pos = runtime.story?.world.player.pos;
+      if (pos) stage.burst(pos.x, pos.y, pos.z, true);
+      stage.hurtShake();
+      audio.play('hit');
+      hud.toast(t('oneWing'));
     } else if (event.type === 'complete') {
       audio.play('win');
     }

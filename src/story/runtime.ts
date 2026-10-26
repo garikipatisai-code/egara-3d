@@ -103,7 +103,7 @@ export class StoryRuntime {
     if (!chapter) return false;
     this.chapterId = id;
     this.selectedId = id;
-    this.story = createStoryState(this.seed(), chapter);
+    this.story = createStoryState(this.seed(), chapter, this.save.amulet ? 1 : 0);
     this.acc = 0;
     this.result = null;
     this.finalized = false;
