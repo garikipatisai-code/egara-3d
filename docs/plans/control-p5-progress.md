@@ -10,11 +10,12 @@ Gate: activating (owner direction 2026-10-26T22:01:15Z)
 | 2 Input + touch + HUD | done | W/S throttle, Q/E vertical, F perch; touch stick + Up/Down/Perch; EN/TE copy |
 | 3 Perch visuals + telemetry | done | slow wingbeats, no trail, perch/airborne toast, `data-speed/perched/altitude` |
 | 4 Story reachability + regression | done | 15 smoke; hover/perch e2e; all chapters/tests green |
-| 5 Perf, docs, deploy | in progress | 81 unit, tsc clean, 183 KB gz; deploy pending |
+| 5 Perf, docs, deploy | done | 81 unit, tsc clean, 183 KB gz, 15 smoke, Pages success, live 200 + live hover/perch check |
 
 ## Log
 
 - 2026-10-26T22:01Z — P5 gate opening: hover-first throttle, vertical control, perch.
 - 2026-10-26T22:30Z — T1 green: zero-throttle hover, W/S throttle, Q/E vertical, perch/detach; 81 unit.
 - 2026-10-26T22:50Z — T2/T3 green: keyboard/touch remap, Up/Down/Perch buttons, slow wings, telemetry/toasts.
-- 2026-10-26T23:02Z — T4 green: 15 smoke; hover and ground-perch e2e pass. Remaining: deploy + close.
+- 2026-10-26T23:02Z — T4 green: 15 smoke; hover and ground-perch e2e pass.
+- 2026-10-26T23:06Z — Deployed `4dd02af`; live 200; live check: W then release → speed 0.01; Q descend + F → perched at 2.35 with toast; no page errors. P5 complete.
