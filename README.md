@@ -14,6 +14,7 @@ npm run dev        # local dev server
 npm run build      # static build in dist/
 npm test           # unit tests (Vitest, 81)
 npx playwright test tests/smoke   # e2e smoke + story flow (15 + live)
+# Force a tier locally: append ?quality=high or ?quality=low
 ```
 
 Note: `npm run test:e2e` currently also collects unit specs (pre-existing
@@ -30,9 +31,25 @@ Playwright `testDir`); use the explicit smoke path above.
   windows), gradient sky + moon, textured lighting, adaptive shadows, fake glow
   halos, wing trail/boost lines, a redesigned Gali, facade/roadside/workshop/
   house/ritual detail, and a CSS vignette/grain grade.
-- **Quality:** pause → Graphics: High/Low. High adds a shadow map and glow;
-  low disables them and renders at a lower scale. Auto-fallback switches to low
-  after one second under 50 fps; the setting persists.
+- **Quality:** pause → Graphics: High/Low. High adds PBR, environment
+  reflections, a 2048 shadow map, bloom and film grade; low swaps to Lambert,
+  drops post/shadows and reduces detail. Auto-fallback switches to low after one
+  second under 50 fps; the setting persists.
+
+## World realism (P6)
+
+- **Nagaram lane:** procedural apartment facades and five lit shopfronts, a
+  temple corner, tea stall, auto-rickshaw, scooters, street dog, pigeons,
+  festival lights, laundry, transformer, puddles, signage and human silhouettes.
+- **Workshop:** pinned pencil studies, locket display, tools, jars, spools,
+  magnifier, paper stack, dust and the giant maker.
+- **Garva House:** marble, chandelier, art, plants, bar, sofas, rug, glass wall,
+  skyline, guards and safe/ledger.
+- **Airport:** terminal, airliner, bus, gantry, reflectors, skyline and traffic.
+- **Ritual/finale:** brass, charms, candles, smoke; fire, embers, broken glass,
+  cannon and oxygen cylinder.
+- **Audio:** city hum, traffic, wind, room tone, fire and tension layers.
+- **Bespoke, original assets only** — no stills, likenesses, songs or copied shots.
 
 ## Controls
 
@@ -88,5 +105,7 @@ docs/         specs, plans, research/world bible, QA
 - P4 plan: `docs/plans/2026-10-26-polish-p4.md`
 - P5 control/perch spec: `docs/specs/2026-10-26-control-perch.md`
 - P5 plan: `docs/plans/2026-10-26-control-p5.md`
+- P6 world-realism spec: `docs/specs/2026-10-26-world-realism.md`
+- P6 plan: `docs/plans/2026-10-26-world-p6.md`
 - Performance: `docs/qa/perf.md`
 - Debt: `docs/debt-ledger.md`

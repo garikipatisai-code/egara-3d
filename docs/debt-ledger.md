@@ -18,6 +18,11 @@ Deferred work, recorded so it is not lost. Not a promise; revisit at the named g
 | Collision fidelity for curved/rotated props | OBBs for buildings; props still approximate | P5 |
 | `npm run test:e2e` also collects `tests/unit/*.spec.ts`; Vitest specs use JSON imports Playwright cannot load | Pre-existing Playwright `testDir` config; smoke path used explicitly in the gate | fix `playwright.config.ts` in a dedicated gate |
 | Quality defaults to high on first run | Auto-fallback handles slow devices; explicit low option exists | device run, then revisit default |
+| High tier 181–250 draw calls; low 125–204 | Density pass exceeded the old <220/<100 budgets; low still hits 54–60 fps in SwiftShader | P7 batch/merge pass |
+| Ambient humans only sway, no walk cycles | Static set dressing first | P7 animation |
+| Shopfronts are 2D planes | Cheap depth; 3D fronts later | P7 |
+| No DOF pass in high tier | Bloom + grade first; DOF costs a depth pass | P7 |
+| No CC0 asset pack | Procedural realism chosen to control licence and weight | P7, with licence record |
 | Perch only on ground/roof/solid tops | Wall/ceiling perching needs orientation work | P6 |
 | No auto-perch snap when very close | Explicit F is clearer; revisit after playtest | P6 |
 | Reverse throttle is bound to S | May feel unnecessary; playtest | P6 |

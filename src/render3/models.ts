@@ -3,6 +3,7 @@ import type { Building } from '../sim3d/arena';
 import type { ShardMotif } from '../content3/types';
 import { textured } from './materials';
 import { glowSprite } from './glow';
+import { facadeTexture } from './textures';
 
 /** Procedural low-poly models. Zero downloads, all original. */
 
@@ -183,12 +184,16 @@ export function buildArena(layout: Building[]): THREE.Group {
 
   const palette = [0x3a4a6e, 0x4a3a5e, 0x3a5a4e, 0x5a4a3a];
   for (const block of layout) {
+    const base = palette[block.colorIdx % palette.length];
+    const facade = facadeTexture(`#${base.toString(16).padStart(6, '0')}`);
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(block.w, block.h, block.d),
-      textured('concrete', palette[block.colorIdx % palette.length], {
-        repeatX: 2,
-        repeatY: 2,
-        roughness: 0.9
+      new THREE.MeshStandardMaterial({
+        map: facade,
+        bumpMap: facade,
+        bumpScale: 0.02,
+        roughness: 0.84,
+        metalness: 0.06
       })
     );
     mesh.position.set(block.x, block.h / 2, block.z);
@@ -273,6 +278,36 @@ export function buildShilpi(): THREE.Group {
   );
   bindi.position.set(0, 30.2, 3.85);
   maker.add(bindi);
+
+  const gold = mat(0xe8b04b, { emissive: 0x8a5a10, ei: 0.55 });
+  for (const side of [-1, 1]) {
+    for (let bangle = 0; bangle < 3; bangle++) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.16, 5, 14), gold);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(side * 6.8, 9.2 + bangle * 0.42, 5.6);
+      maker.add(ring);
+    }
+    const earring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.1, 5, 12), gold);
+    earring.position.set(side * 3.7, 27.7, 0.2);
+    maker.add(earring);
+  }
+
+  const pallu = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.2, 13),
+    textured('fabric', 0x2e6f6a, { repeatX: 2, repeatY: 3, roughness: 0.9 })
+  );
+  pallu.position.set(-4.8, 17.5, 4.9);
+  pallu.rotation.z = -0.16;
+  pallu.rotation.x = 0.08;
+  maker.add(pallu);
+
+  const strands = mat(0x1c1418);
+  for (let i = 0; i < 7; i++) {
+    const strand = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.03, 7, 4), strands);
+    strand.position.set(-3.6 + i * 1.2, 27.2, -3.3);
+    strand.rotation.x = 0.12;
+    maker.add(strand);
+  }
 
   maker.name = 'shilpi';
   return maker;
@@ -481,6 +516,11 @@ export function buildDiviner(): THREE.Group {
   beads.rotation.x = Math.PI / 2;
   diviner.add(beads);
 
+  const beard = new THREE.Mesh(new THREE.ConeGeometry(2.1, 5, 7), mat(0xc8c0b8));
+  beard.position.set(0, 19.4, 3.3);
+  beard.rotation.x = Math.PI;
+  diviner.add(beard);
+
   diviner.name = 'diviner';
   return diviner;
 }
@@ -512,6 +552,22 @@ export function buildGarva(): THREE.Group {
   const tie = new THREE.Mesh(new THREE.BoxGeometry(1.1, 5.4, 0.3), mat(0x4a1010));
   tie.position.set(0, 20.5, 4.9);
   garva.add(tie);
+
+  for (const side of [-1, 1]) {
+    const lapel = new THREE.Mesh(new THREE.BoxGeometry(2.1, 7, 0.35), suit);
+    lapel.position.set(side * 2.1, 21.2, 4.8);
+    lapel.rotation.z = side * -0.18;
+    garva.add(lapel);
+  }
+  const pocket = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 0.2), shirt);
+  pocket.position.set(2.8, 22.4, 4.75);
+  garva.add(pocket);
+  for (const side of [-1, 1]) {
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.22, 0.2), hair);
+    brow.position.set(side * 1.2, 32.4, 3.4);
+    brow.rotation.z = side * 0.12;
+    garva.add(brow);
+  }
 
   const shoulders = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), suit);
   shoulders.scale.set(1, 0.4, 0.8);

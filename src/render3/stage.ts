@@ -13,6 +13,8 @@ import { ChaseCamera } from './camera';
 import { ParticlePool } from './particles';
 import { createSky } from './sky';
 import { getBlobTexture, glowSprite } from './glow';
+import { createPost, type PostPipeline } from './post';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type { ChapterDef } from '../content3/types';
 import type { World } from '../sim3d/flight';
 import { currentObjective, targetPosition, type StoryState } from '../sim3d/story';
@@ -39,6 +41,9 @@ export class Stage {
   private accentBase = 0;
   private quality: 'high' | 'low' = 'high';
   private indoor = false;
+  private post: PostPipeline | null = null;
+  private environment: THREE.Texture | null = null;
+  private readonly lowMaterials = new Map<string, THREE.Material>();
   private worldGroup: THREE.Group | null = null;
   private shardsGroup: THREE.Group | null = null;
   private readonly shardMeshes = new Map<string, THREE.Group>();
@@ -49,6 +54,7 @@ export class Stage {
   private readonly actorMeshes = new Map<string, THREE.Group>();
   private nodesGroup: THREE.Group | null = null;
   private readonly nodeMeshes: { objectiveId: string; index: number; mesh: THREE.Group }[] = [];
+  private readonly ambientActors: THREE.Object3D[] = [];
   private marker: THREE.Group | null = null;
   private hubMode = false;
   private time = 0;
@@ -64,6 +70,7 @@ export class Stage {
     this.renderer.toneMappingExposure = 1.35;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.info.autoReset = false;
 
     this.scene.background = new THREE.Color('#111a38');
     this.scene.fog = new THREE.Fog('#111a38', 60, 220);
@@ -127,6 +134,7 @@ export class Stage {
     const height = Math.max(1, Math.round(window.innerHeight * this.renderScale));
     this.renderer.setSize(width, height, false);
     this.chase.setAspect(window.innerWidth / window.innerHeight);
+    this.post?.setSize(width, height, this.renderer.getPixelRatio());
   }
 
   /** Adaptive resolution: the scene stays sharp on capable devices, readable on slow ones. */
@@ -211,6 +219,7 @@ export class Stage {
     this.shardMeshes.clear();
     this.actorMeshes.clear();
     this.nodeMeshes.length = 0;
+    this.ambientActors.length = 0;
     this.hazardMeshes.length = 0;
     this.lights.clear();
     this.marker!.visible = false;
@@ -235,23 +244,31 @@ export class Stage {
     this.layoutShadowCamera(sun);
     this.lights.add(sun);
 
+    const house = chapter.location === 'garva-house' || chapter.location === 'glass-house';
     const accent = new THREE.PointLight(
       chapter.palette.accent,
-      chapter.location === 'glass-house' ? 115 : indoor ? 85 : 90,
-      indoor ? 95 : 110,
+      chapter.location === 'glass-house' ? 125 : house ? 125 : indoor ? 85 : 90,
+      indoor ? 110 : 110,
       1.8
     );
     if (chapter.location === 'glass-house') accent.position.set(0, 18, -14);
+    else if (house) accent.position.set(0, 20, 0);
     else accent.position.set(0, indoor ? 19 : 16, indoor ? 0 : -26);
     this.accentLight = accent;
     this.accentBase = accent.intensity;
     this.lights.add(accent);
+
+    if (chapter.location === 'airport-road') {
+      const moonKey = new THREE.DirectionalLight(0x8ab8f0, 1.8);
+      moonKey.position.set(-40, 50, 30);
+      this.lights.add(moonKey);
+    }
     this.applyShadowQuality();
   }
 
   private layoutShadowCamera(sun: THREE.DirectionalLight): void {
     sun.castShadow = this.quality === 'high';
-    sun.shadow.mapSize.set(this.quality === 'high' ? 1024 : 512, this.quality === 'high' ? 1024 : 512);
+    sun.shadow.mapSize.set(this.quality === 'high' ? 2048 : 512, this.quality === 'high' ? 2048 : 512);
     sun.shadow.camera.left = -70;
     sun.shadow.camera.right = 70;
     sun.shadow.camera.top = 70;
@@ -271,11 +288,94 @@ export class Stage {
     // The gradient sky is one cheap draw and carries most of the atmosphere.
     this.sky.mesh.visible = true;
     this.scene.traverse((child) => {
-      if ((child as THREE.Sprite).isSprite) child.visible = high;
+      if ((child as THREE.Sprite).isSprite) child.visible = true;
+      if (child.userData.lowDetail) child.visible = high;
     });
     this.moon.visible = !this.indoor;
     this.stars.visible = !this.indoor;
-    if (this.accentLight) this.accentLight.intensity = high ? this.accentBase : 0;
+    if (this.accentLight) this.accentLight.intensity = high ? this.accentBase : this.accentBase * 0.55;
+    if (high) this.restoreHighMaterials();
+    else this.applyLowMaterials();
+  }
+
+  private lowMaterial(material: THREE.MeshStandardMaterial): THREE.Material {
+    const cached = this.lowMaterials.get(material.uuid);
+    if (cached) return cached;
+    const low = new THREE.MeshLambertMaterial({
+      color: material.color,
+      map: material.map,
+      emissive: material.emissive,
+      emissiveMap: material.emissiveMap,
+      emissiveIntensity: material.emissiveIntensity,
+      transparent: material.transparent,
+      opacity: material.opacity,
+      side: material.side,
+      depthWrite: material.depthWrite,
+      alphaTest: material.alphaTest,
+      vertexColors: material.vertexColors
+    });
+    this.lowMaterials.set(material.uuid, low);
+    return low;
+  }
+
+  private applyLowMaterials(): void {
+    this.scene.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const material = mesh.material as THREE.Material | THREE.Material[];
+      if (Array.isArray(material)) {
+        if (mesh.userData.highMaterial) return;
+        mesh.userData.highMaterial = material;
+        mesh.material = material.map((entry) =>
+          (entry as THREE.MeshStandardMaterial).isMeshStandardMaterial
+            ? this.lowMaterial(entry as THREE.MeshStandardMaterial)
+            : entry
+        );
+      } else if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+        if (mesh.userData.highMaterial) return;
+        mesh.userData.highMaterial = material;
+        mesh.material = this.lowMaterial(material as THREE.MeshStandardMaterial);
+      }
+    });
+    this.scene.environment = null;
+  }
+
+  private restoreHighMaterials(): void {
+    this.scene.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const high = mesh.userData.highMaterial as THREE.Material | THREE.Material[] | undefined;
+      if (high) {
+        mesh.material = high;
+        delete mesh.userData.highMaterial;
+      }
+    });
+    this.ensureEnvironment();
+  }
+
+  private ensureEnvironment(): void {
+    if (this.environment) {
+      this.scene.environment = this.environment;
+      this.scene.environmentIntensity = 0.38;
+      return;
+    }
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    const envScene = new RoomEnvironment();
+    const target = pmrem.fromScene(envScene, 0.04);
+    this.environment = target.texture;
+    this.scene.environment = this.environment;
+    this.scene.environmentIntensity = 0.38;
+    pmrem.dispose();
+  }
+
+  private ensurePost(): void {
+    if (this.post) return;
+    this.post = createPost(this.renderer, this.scene, this.chase.camera);
+    this.post.setSize(
+      Math.max(1, Math.round(window.innerWidth * this.renderScale)),
+      Math.max(1, Math.round(window.innerHeight * this.renderScale)),
+      this.renderer.getPixelRatio()
+    );
   }
 
   setQuality(quality: 'high' | 'low'): void {
@@ -283,6 +383,14 @@ export class Stage {
     this.renderer.setPixelRatio(
       Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.5 : 0.8)
     );
+    if (quality === 'high') {
+      this.ensureEnvironment();
+      this.ensurePost();
+    } else {
+      this.post?.dispose();
+      this.post = null;
+      this.scene.environment = null;
+    }
     this.applyQualityVisuals();
     this.applyShadowQuality();
     this.resize();
@@ -446,6 +554,12 @@ export class Stage {
     }
 
     this.markWorldShadows(world);
+    world.traverse((child) => {
+      if (child.userData.ambient) {
+        child.userData.baseYaw = child.rotation.y;
+        this.ambientActors.push(child);
+      }
+    });
     for (const actor of this.actorMeshes.values()) this.markActorShadows(actor);
     if (this.allyGroup) this.markActorShadows(this.allyGroup);
     for (const node of this.nodeMeshes) this.markActorShadows(node.mesh);
@@ -559,6 +673,11 @@ export class Stage {
       }
     });
     for (let i = world.foes.length; i < this.drones.length; i++) this.drones[i].visible = false;
+
+    for (const actor of this.ambientActors) {
+      const phase = (actor.userData.ambient?.phase as number | undefined) ?? 0;
+      actor.rotation.y = (actor.userData.baseYaw as number | undefined ?? 0) + Math.sin(this.time * 0.35 + phase) * 0.035;
+    }
 
     this.syncStory(story);
     this.syncMarker(story);
@@ -701,7 +820,9 @@ export class Stage {
   render(dt: number): void {
     if (!this.hubMode) this.particles.update(dt);
     this.sky.update(this.chase.camera);
-    this.renderer.render(this.scene, this.chase.camera);
+    this.renderer.info.reset();
+    if (this.quality === 'high' && this.post) this.post.render(dt);
+    else this.renderer.render(this.scene, this.chase.camera);
     this.drawCalls = this.renderer.info.render.calls;
   }
 

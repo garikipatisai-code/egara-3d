@@ -243,7 +243,12 @@ export function buildCableLine(points: { x: number; y: number; z: number }[]): T
   return new THREE.Line(geometry, material);
 }
 
-export function buildDustField(count = 260, radius = 26): THREE.Points {
+export function buildDustField(
+  count = 260,
+  radius = 26,
+  color = 0xffd8a0,
+  size = 0.12
+): THREE.Points {
   const positions = new Float32Array(count * 3);
   let seed = 11;
   const rand = () => {
@@ -262,8 +267,8 @@ export function buildDustField(count = 260, radius = 26): THREE.Points {
   return new THREE.Points(
     geometry,
     new THREE.PointsMaterial({
-      color: 0xffd8a0,
-      size: 0.12,
+      color,
+      size,
       transparent: true,
       opacity: 0.55,
       depthWrite: false,

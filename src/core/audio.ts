@@ -1,5 +1,5 @@
 export type SoundName = 'sting' | 'hit' | 'win' | 'lose';
-export type SceneName = 'menu' | 'lane' | 'workshop';
+export type SceneName = 'menu' | 'lane' | 'airport' | 'workshop' | 'house' | 'ritual' | 'finale';
 
 interface Layer {
   gain: GainNode;
@@ -61,10 +61,16 @@ export class AudioController {
   }
 
   private applyScene(): void {
-    this.setLayer('buzz', this.scene === 'menu' ? 0.05 : 0.16);
-    this.setLayer('wind', this.scene === 'lane' ? 0.13 : 0);
-    this.setLayer('room', this.scene === 'workshop' ? 0.15 : this.scene === 'menu' ? 0.07 : 0);
-    this.setLayer('tension', this.scene === 'menu' ? 0 : this.tension * 0.08);
+    const scene = this.scene;
+    const outdoor = scene === 'lane' || scene === 'airport';
+    const interior = scene === 'workshop' || scene === 'house';
+    this.setLayer('buzz', scene === 'menu' ? 0.05 : 0.14);
+    this.setLayer('wind', outdoor ? 0.12 : scene === 'finale' ? 0.08 : 0);
+    this.setLayer('room', interior ? 0.14 : scene === 'ritual' ? 0.12 : scene === 'menu' ? 0.07 : 0);
+    this.setLayer('city', outdoor || interior ? 0.075 : 0);
+    this.setLayer('traffic', outdoor ? 0.055 : 0);
+    this.setLayer('fire', scene === 'finale' ? 0.2 : scene === 'ritual' ? 0.07 : 0);
+    this.setLayer('tension', scene === 'menu' ? 0 : this.tension * 0.08);
   }
 
   setLayer(name: string, level: number): void {
@@ -83,22 +89,24 @@ export class AudioController {
     gain.connect(this.master);
     const nodes: AudioScheduledSourceNode[] = [];
 
-    if (name === 'wind') {
+    if (name === 'wind' || name === 'city' || name === 'traffic' || name === 'fire') {
       const length = ctx.sampleRate * 2;
       const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       let last = 0;
+      const smooth = name === 'city' ? 0.995 : name === 'traffic' ? 0.985 : 0.94;
       for (let i = 0; i < length; i++) {
         const white = Math.random() * 2 - 1;
-        last = last * 0.96 + white * 0.04;
-        data[i] = last * 3.2;
+        last = last * smooth + white * (1 - smooth);
+        data[i] = name === 'fire' ? white * (Math.random() > 0.998 ? 2.4 : 0.35) : last * 3.2;
       }
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
       const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 620;
+      filter.type = name === 'fire' ? 'highpass' : 'lowpass';
+      filter.frequency.value =
+        name === 'wind' ? 620 : name === 'city' ? 380 : name === 'traffic' ? 220 : 1400;
       source.connect(filter);
       filter.connect(gain);
       source.start();

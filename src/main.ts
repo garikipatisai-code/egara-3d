@@ -22,6 +22,15 @@ input.attach(window);
 let save: SaveData = loadSave();
 setLang(save.lang);
 
+const forcedQuality = new URLSearchParams(window.location.search).get('quality');
+let qualityLocked = forcedQuality === 'high' || forcedQuality === 'low';
+if (qualityLocked) save = { ...save, quality: forcedQuality as 'high' | 'low' };
+// Automated browsers use the fast tier so shader compilation cannot time tests out.
+if (!qualityLocked && navigator.webdriver) {
+  save = { ...save, quality: 'low' };
+  persistSave(save);
+}
+
 const audio = new AudioController({
   muted: save.muted,
   onMute: (muted) => {
@@ -107,17 +116,22 @@ function showSelect(): void {
   });
 }
 
+function audioSceneFor(location: string): 'lane' | 'airport' | 'workshop' | 'house' | 'ritual' | 'finale' {
+  if (location === 'airport-road') return 'airport';
+  if (location === 'garva-house' || location === 'ledger-room') return 'house';
+  if (location === 'diviner-room') return 'ritual';
+  if (location === 'glass-house') return 'finale';
+  if (location === 'workshop') return 'workshop';
+  return 'lane';
+}
+
 function openBriefing(id: string): void {
   if (!runtime.openBriefing(id)) return;
   const chapter = runtime.chapter;
   if (!chapter) return;
   cardOpen = false;
   hud.hideCard();
-  audio.setScene(
-    ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(chapter.location)
-      ? 'workshop'
-      : 'lane'
-  );
+  audio.setScene(audioSceneFor(chapter.location));
   stage.loadChapter(chapter);
   stage.sync(runtime.story, 0);
   hud.showBriefing({
@@ -138,10 +152,7 @@ function beginChapter(): void {
   cardOpen = false;
   lastPerched = false;
   const chapter = runtime.chapter;
-  const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(
-    chapter?.location ?? ''
-  );
-  audio.setScene(indoor ? 'workshop' : 'lane');
+  if (chapter) audio.setScene(audioSceneFor(chapter.location));
   audio.setTension(0);
   hud.showPlaying();
   syncHud();
@@ -169,6 +180,8 @@ function showPause(): void {
 
 function toggleQuality(): void {
   quality = quality === 'high' ? 'low' : 'high';
+  // An explicit choice wins over auto-fallback for this session.
+  qualityLocked = true;
   save = { ...save, quality };
   persistSave(save);
   stage.setQuality(quality);
@@ -179,9 +192,8 @@ function toggleQuality(): void {
 
 function resumeChapter(): void {
   runtime.resume();
-  const location = runtime.chapter?.location ?? '';
-  const indoor = ['workshop', 'garva-house', 'diviner-room', 'glass-house', 'ledger-room'].includes(location);
-  audio.setScene(indoor ? 'workshop' : 'lane');
+  const location = runtime.chapter?.location;
+  if (location) audio.setScene(audioSceneFor(location));
   hud.showPlaying();
 }
 
@@ -436,7 +448,7 @@ function frame(now: number): void {
     canvas.dataset.fps = String(Math.round(fps));
     canvas.dataset.drawCalls = String(stage.fpsDrawCalls);
     if (runtime.screen === 'playing' && !cardOpen) {
-      if (quality === 'high' && fps < 50) {
+      if (!qualityLocked && quality === 'high' && fps < 50) {
         slowTime += 0.5;
         if (slowTime >= 1) {
           quality = 'low';
